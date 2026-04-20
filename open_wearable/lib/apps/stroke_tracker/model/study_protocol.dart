@@ -10,7 +10,7 @@ class StudyProtocol {
   }
 
   void addSessionId(String id) {
-    sessionId = id;
+    sessionId = id.replaceAll(':', '-');
   }
 
   String t(String en, String de) => isEnglish ? en : de;
