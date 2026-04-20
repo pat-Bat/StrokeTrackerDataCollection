@@ -41,7 +41,7 @@ class OtherEvent {
   final int blockNumber;
   final String instruction;
   final String taskId;
-  final DateTime timestamp;
+  final int timestamp;
   final int relativeTime;
   final String eventType;
 
@@ -60,7 +60,7 @@ class OtherEvent {
       blockNumber.toString(),
       instruction,
       taskId,
-      timestamp.toIso8601String(),
+      timestamp.toString(),
       relativeTime.toString(),
       eventType,
     ];
@@ -170,7 +170,7 @@ class ExperimentLogger extends ChangeNotifier{
       blockNumber: blockNumber,
       instruction: instruction,
       taskId: taskId,
-      timestamp: now,
+      timestamp: now.microsecondsSinceEpoch,
       relativeTime: relative,
       eventType: eventType,
     );

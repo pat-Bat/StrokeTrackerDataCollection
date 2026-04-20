@@ -128,17 +128,18 @@ Future<void> playRight() async {
     }
     try {
 
-      widget.logger.logOtherEvent(
-        widget.repetitions,
-        "Start Record of ${widget.taskName}",
-        widget.instruction,
-        "Recording_Start",
-      );
+      
       setState(() {
       recording = true;
       isStarting = false;
     });
       _startTimer();
+      widget.logger.logOtherEvent(
+        widget.currentRepetition,
+        "Start Record of ${widget.taskName}",
+        widget.instruction,
+        "Recording_Start",
+      );
       debugPrint("MEasurement gestartet.");
     } catch (e) {
       debugPrint("Fehler beim Starten der Measurement: $e");
@@ -192,7 +193,12 @@ Future<void> playRight() async {
     if (!recording) {
       return;
     }
-    
+    widget.logger.logOtherEvent(
+        widget.currentRepetition,
+        "Stop Record of ${widget.taskName}",
+        widget.instruction,
+        "Recording_Stop",
+      );
     widget.stopMeasuring();
     setState(() {
       recording = false;
@@ -201,12 +207,7 @@ Future<void> playRight() async {
     
 
     try {
-      widget.logger.logOtherEvent(
-        widget.repetitions,
-        "Stop Record of ${widget.taskName}",
-        widget.instruction,
-        "Recording_Stop",
-      );
+      
     } catch (e) {
       debugPrint("Fehler beim Stoppen der Videoaufnahme: $e");
     }

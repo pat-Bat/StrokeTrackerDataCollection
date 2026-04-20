@@ -172,16 +172,17 @@ class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
         });
       
       
-      widget.logger.logOtherEvent(
-        widget.repetitions,
-        "Start Record of smilingpatient",
-        "Smiling Task",
-        "Video_Record_Start",
-      );
+      
       setState(() {
         recording = true;
       });
       _startTimer();
+      widget.logger.logOtherEvent(
+        widget.currentRepetition,
+        "Start Record of smilingpatient",
+        "Smiling Task",
+        "Video_Record_Start",
+      );
       debugPrint("Videoaufnahme gestartet.");
     } catch (e) {
       widget.stopMeasuring();
@@ -286,10 +287,17 @@ class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
     if (!recording) {
       return;
     }
-    
+    widget.logger.logOtherEvent(
+        widget.currentRepetition,
+        "Stop Record of smiling patient",
+        "Smiling task",
+        "Video_Record_Stop",
+      );
+
     setState(() {
       recording = false;
     });
+
     widget.stopMeasuring();
     _timer?.cancel();
     
@@ -300,12 +308,7 @@ class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
     try {
       await _cameraController!.stopImageStream();
 
-      widget.logger.logOtherEvent(
-        widget.repetitions,
-        "Stop Record of smiling patient",
-        "Smiling task",
-        "Video_Record_Stop",
-      );
+      
     } catch (e) {
       debugPrint("Fehler beim Stoppen der Videoaufnahme: $e");
     }
