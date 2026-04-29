@@ -52,7 +52,7 @@ class _StudyRunnerState extends State<StudyRunner> {
   int _currentIndex = 0;
   
   int _stepsDone = 0;
-  late final int _stepsTotal;
+  int _stepsTotal = 0;
   int _repetitionCounter = 1;
   late final FaceDetectorIsolate _faceDetectorIsolate;
   /// Zählt echte Mess-Schritte (1,2,3...)
@@ -206,6 +206,7 @@ class _StudyRunnerState extends State<StudyRunner> {
         } else {
           _repetitionCounter++;
           currentStep.repetitions++;
+          _stepsTotal++;
         }
 
       }
