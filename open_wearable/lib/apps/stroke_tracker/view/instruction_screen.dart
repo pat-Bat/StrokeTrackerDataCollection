@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
+import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/repetition_screen.dart';
 
 class EarbudSealTestScreen extends StatefulWidget {

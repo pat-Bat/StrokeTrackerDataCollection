@@ -10,7 +10,7 @@ class StudyStep {
   final String heading;
   final String pathToImage;
   final String description;
-  final int repetitions;
+  int repetitions;
   final List<String> measuringInstructions;
   final bool debugMode;
   final bool secondaryDescription;
@@ -39,6 +39,7 @@ class StudyStep {
     return 0 + random.nextInt(measuringInstructions.length);
   });
   }
+
 
 
 }

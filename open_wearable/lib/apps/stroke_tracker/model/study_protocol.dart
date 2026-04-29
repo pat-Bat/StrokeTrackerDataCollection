@@ -77,68 +77,8 @@ class StudyProtocol {
     ],
     playSound: true,
     soundside: Side.right,
-    repetitions: 1,
+    repetitions: 6,
   ),
-  StudyStep(
-    type: StudyStepType.measuringTap,
-    measuringInstructions: [
-      t(
-        "Instruct the patient double-tap the left Earable with the right Hand twice",
-        "Den Patienten anweisen, das linke Earable mit der rechten Hand zweimal schnell hintereinander anzutippen"
-      ),
-    ],
-    playSound: true,
-    soundside: Side.left,
-    repetitions: 1,
-  ),
-    StudyStep(
-    type: StudyStepType.measuringTap,
-    measuringInstructions: [
-      t(
-        "Instruct the patient double-tap the right Earable with the left Hand twice",
-        "Den Patienten anweisen, das rechte Earable mit der linken Hand zweimal schnell hintereinander anzutippen"
-      ),
-    ],
-    playSound: true,
-    soundside: Side.right,
-    repetitions: 1,
-  ),
-  StudyStep(
-    type: StudyStepType.measuringTap,
-    measuringInstructions: [
-      t(
-        "Instruct the patient double-tap the left Earable with the right Hand twice",
-        "Den Patienten anweisen, das linke Earable mit der rechten Hand zweimal schnell hintereinander anzutippen"
-      ),
-    ],
-    playSound: true,
-    soundside: Side.left,
-    repetitions: 1,
-  ),StudyStep(
-    type: StudyStepType.measuringTap,
-    measuringInstructions: [
-      t(
-        "Instruct the patient double-tap the right Earable with the left Hand",
-        "Den Patienten anweisen, das rechte Earable mit der linken Hand zweimal schnell hintereinander anzutippen"
-      ),
-    ],
-    playSound: true,
-    soundside: Side.right,
-    repetitions: 1,
-  ),
-  StudyStep(
-    type: StudyStepType.measuringTap,
-    measuringInstructions: [
-      t(
-        "Instruct the patient double-tap the left Earable with the right Hand twice",
-        "Den Patienten anweisen, das linke Earable mit der rechten Hand zweimal schnell hintereinander anzutippen"
-      ),
-    ],
-    playSound: true,
-    soundside: Side.left,
-    repetitions: 1,
-  ),
-  
     StudyStep(type: StudyStepType.ending),
     ];
 }

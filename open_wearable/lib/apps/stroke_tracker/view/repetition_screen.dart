@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/manager.dart';
+import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/sealcheck.dart';
 
 class LikertChoice extends StatefulWidget{
@@ -63,10 +64,6 @@ class _LikertChoiceState extends State<LikertChoice> {
   }
 }
 
-enum Side {
-  left,
-  right,
-}
 
 class TaskScreen extends StatefulWidget{
   final int currentRepetition;

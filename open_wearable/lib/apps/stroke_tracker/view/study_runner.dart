@@ -1,3 +1,4 @@
+
 import 'package:face_detection_tflite/face_detection_tflite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -133,6 +134,28 @@ class _StudyRunnerState extends State<StudyRunner> {
     await _manager.deactivateSensors();
   }
 
+  Future<bool?> showContinueDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(widget.protocol.t('Continue?','Weiter?')),
+        content: Text(widget.protocol.t('Do you want to continue taking measurements?','Wollen Sie weitere Messung durchführen?')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(widget.protocol.t('No', 'Nein')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(widget.protocol.t('Yes', 'Ja')),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   Future<void> _saveAndAdvance() async {
     await _stopAndConfirm();
     _logger.logTaskEnd();
@@ -161,6 +184,14 @@ class _StudyRunnerState extends State<StudyRunner> {
       
     ),
     );
+    bool? boolContinue = false;
+    
+    if (_repetitionCounter < maxRepetitions){
+
+    }else{
+      boolContinue = await showContinueDialog(context);
+    }
+
     setState(() {
       
       
@@ -169,9 +200,14 @@ class _StudyRunnerState extends State<StudyRunner> {
         print("repeat step");
         _repetitionCounter++;
       } else {
-        _repetitionCounter = 1;
-        
-        _nextStep();
+        if ( boolContinue == null || boolContinue == false){
+          _repetitionCounter = 1;
+          _nextStep();
+        } else {
+          _repetitionCounter++;
+          currentStep.repetitions++;
+        }
+
       }
     });
   }
@@ -280,6 +316,19 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
         
         if ( step.type == StudyStepType.measuringTap) {
+          var instruction = [widget.protocol.t(
+          "Instruct the patient double-tap the left Earable with the right Hand twice",
+          "Den Patienten anweisen, das linke Earable mit der rechten Hand zweimal schnell hintereinander anzutippen"),];
+          Side soundside = Side.left;
+          if (_repetitionCounter % 2 == 1) {
+            soundside = Side.right;
+            instruction = [
+              widget.protocol.t(
+                "Instruct the patient double-tap the right Earable with the left Hand",
+                "Den Patienten anweisen, das rechte Earable mit der linken Hand zweimal schnell hintereinander anzutippen"
+              ),
+            ];
+          }
           return MeasuringScreen(
             repetitions: step.repetitions,
             stepsDone: _stepsDone,
@@ -292,9 +341,9 @@ class _StudyRunnerState extends State<StudyRunner> {
             logger: _logger, 
             recordingId: widget.protocol.sessionId, 
             taskName: step.heading, 
-            instruction: step.measuringInstructions[step.instructionOrder[_repetitionCounter-1]],
+            instruction: instruction[0],
             playSound: step.playSound,
-            soundSide: step.soundside,
+            soundSide: soundside,
             t: widget.protocol.t,
             dispose: _manager.deactivateSensors,
             manager: _manager,
@@ -304,7 +353,18 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
 
         if (step.type == StudyStepType.measuringHead) {
-          
+          var instruction = widget.protocol.t(
+          "Instruct the patient to start with the head in a neutral position, then turn it to the right, back to neutral, and then to the left, and back to neutral.",
+          "Den Patienten anweisen, den Kopf zunächst in die neutrale Position zu bringen, dann nach rechts zu drehen, zurück zur Neutralstellung und anschließend nach links und zurück zur Neutralstellung" );
+          if (_repetitionCounter % 2 == 1) {
+            instruction = 
+              widget.protocol.t(
+          "Instruct the patient to start with the head in a neutral position, then turn it to the left, back to neutral, and then to the right, and back to neutral.",
+          "Den Patienten anweisen, den Kopf zunächst in die neutrale Position zu bringen, dann nach links zu drehen, zurück zur Neutralstellung und anschließend nach rechts und zurück zur Neutralstellung."
+          )
+            ;
+          }
+
           return MeasuringScreen(
             stepsDone: _stepsDone,
             stepsTotal: _stepsTotal,
@@ -317,7 +377,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             logger: _logger, 
             recordingId: widget.protocol.sessionId, 
             taskName: step.heading, 
-            instruction: step.measuringInstructions[step.instructionOrder[_repetitionCounter-1]],
+            instruction: instruction,
             playSound: step.playSound,
             soundSide: step.soundside,
             t: widget.protocol.t,
