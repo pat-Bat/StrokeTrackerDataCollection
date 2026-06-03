@@ -379,7 +379,7 @@ class ExperimentManager extends ChangeNotifier{
     await _rightSubscription?.cancel();
     await _ringSubscription?.cancel();
 
-    
+    /*
     // Deactivate each configured sensor by removing their options
     for (var sensorConfig in expConfig.globalSensorConfigs) {
       final sensorName = sensorConfig.sensor.toLowerCase();
@@ -426,7 +426,7 @@ class ExperimentManager extends ChangeNotifier{
           }
         }
       }
-    }
+    } */
     await Future.wait([
       ringSensorCfgProvider.turnOffAllSensors(),
     rightSensorCfgProvider.turnOffAllSensors(),

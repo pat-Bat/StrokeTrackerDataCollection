@@ -7,6 +7,8 @@ import 'package:open_wearable/apps/stroke_tracker/view/demographics_survey.dart'
 import 'package:open_wearable/apps/stroke_tracker/view/download_page.dart';
 import 'package:open_wearable/view_models/sensor_configuration_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+
 
 
 
@@ -35,6 +37,15 @@ class StudySelection extends StatefulWidget {
 class _StudySelectionState extends State<StudySelection> {
   final TextEditingController _controller = TextEditingController();
   bool isEnglish = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
+  }
 
   void _submitParticipantId() {
     String inputString = _controller.text.trim();
@@ -162,6 +173,17 @@ class _StudySelectionState extends State<StudySelection> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    // Optional: restore UI when leaving screen
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
+
+    super.dispose();
+  }
+
 }
 
 

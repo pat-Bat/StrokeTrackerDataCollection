@@ -5,8 +5,11 @@ import 'package:share_plus/share_plus.dart';
 
 class SummaryScreen extends StatefulWidget {
   final VoidCallback onLeaveStudy;
+  final String Function(String en,String de) t;
   const SummaryScreen({super.key,
   required this.onLeaveStudy,
+  required this.t
+
   });
   
   @override
@@ -26,23 +29,23 @@ class _SummaryScreenState extends State<SummaryScreen> {
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              "Study Completed!",
+            Text(
+              widget.t("Study Completed!","Studie abgeschlossen!"),
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Your recordings and logs are ready. Export them below.",
+            Text(
+              widget.t("Your recordings and logs are ready. Export them below.", "Ihr Aufnahmen sind bereit. Sie können diese nun Exportieren."),
               style: TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 50),
 
-            // ================= LOGS =================
+            
             ElevatedButton.icon(
               onPressed: () => _showExportDialog(type: "logs"),
               icon: const Icon(Icons.description),
@@ -51,7 +54,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
             const SizedBox(height: 20),
 
-            // ================= FACEMESH =================
+            
             ElevatedButton.icon(
               onPressed: () => _showExportDialog(type: "facemesh"),
               icon: const Icon(Icons.face),
@@ -71,28 +74,28 @@ class _SummaryScreenState extends State<SummaryScreen> {
     ));
   }
 
-  // ================= DIALOG =================
+  
   Future<void> _showExportDialog({required String type}) async {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text("Export Data"),
-          content: const Text("Choose what you want to export"),
+          title: Text(widget.t("Export Data", "Daten Exportieren")),
+          content: Text(widget.t("Choose what you want to export", "Wählen Sie die zu exportierenden Daten")),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 _exportSingle(type);
               },
-              child: const Text("Current File"),
+              child: Text(widget.t("Current File", "Daten dieser Studie")),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 _exportAll(type);
               },
-              child: const Text("All Files"),
+              child: Text(widget.t("All Files", "Alle Daten")),
             ),
           ],
         );
@@ -100,7 +103,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
   }
 
-  // ================= SINGLE EXPORT =================
+  
   Future<void> _exportSingle(String type) async {
     List<File> files;
 
@@ -126,7 +129,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
   }
   }
-  // ================= ALL EXPORT =================
+  
   Future<void> _exportAll(String type) async {
     List<File> files;
 

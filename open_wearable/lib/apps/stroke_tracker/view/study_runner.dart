@@ -1,6 +1,9 @@
 
+import 'dart:math';
+
 import 'package:face_detection_tflite/face_detection_tflite.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
@@ -14,6 +17,7 @@ import 'package:open_wearable/apps/stroke_tracker/view/measuring_page.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/repetition_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/smile_check_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/study_selector.dart';
+import 'package:open_wearable/apps/stroke_tracker/view/test_selection.dart';
 
 import 'package:open_wearable/view_models/sensor_configuration_provider.dart';
 
@@ -49,7 +53,7 @@ class StudyRunner extends StatefulWidget {
 
 class _StudyRunnerState extends State<StudyRunner> {
   late final List<StudyStep> _steps;
-  int _currentIndex = 0;
+  int _currentIndex = -1;
   
   int _stepsDone = 0;
   int _stepsTotal = 0;
@@ -71,6 +75,10 @@ class _StudyRunnerState extends State<StudyRunner> {
     _stepsTotal = widget.protocol.stepsTotal();
     _logger = ExperimentLogger();
     _loadingFuture = _loadConfigAndInitManager();
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
+
   }
 
   //takes 100-500ms
@@ -134,6 +142,32 @@ class _StudyRunnerState extends State<StudyRunner> {
     await _manager.deactivateSensors();
   }
 
+  void onHeadTurnTest() {
+    _jumpToTest(2);
+  }
+
+  void onSmileTest() {
+    _jumpToTest(0);
+  }
+
+  void onTapTest() {
+    _jumpToTest(4);
+  }
+
+  void _jumpToTest(int index) {
+    setState(() {
+      _currentIndex = index;
+      _repetitionCounter = 1;
+    });
+  }
+
+  Future<void> _testSelection() async{
+    setState(() {
+      _currentIndex = -1;
+      _repetitionCounter = 1;
+    });
+  }
+
   Future<bool?> showContinueDialog(BuildContext context) {
   return showDialog<bool>(
     context: context,
@@ -155,13 +189,20 @@ class _StudyRunnerState extends State<StudyRunner> {
     },
   );
 }
+  void addRepetition() {
+    setState(() {
+      _steps[_currentIndex].repetitions++;
+      _stepsTotal++;
+    });
+    print("Repcounter:$_repetitionCounter");
+    print("steps_reps:${_steps[_currentIndex].repetitions}");
+  }
 
   Future<void> _saveAndAdvance() async {
-    await _stopAndConfirm();
     _logger.logTaskEnd();
     await _logger.stopAndWriteLogging(false);
     final currentStep = _steps[_currentIndex];
-    final maxRepetitions = currentStep.repetitions;
+    int maxRepetitions = currentStep.repetitions;
     setState(() {
       if (_steps[_currentIndex].type != StudyStepType.instruction) {
         _stepsDone = _stepsDone + 1;
@@ -180,18 +221,12 @@ class _StudyRunnerState extends State<StudyRunner> {
       currentStepNumber: _currentIndex,
       currentStepTask: _steps[_currentIndex].heading,
       translate: widget.protocol.t,
+      addRepetition: addRepetition,
       ),
       
     ),
     );
-    bool? boolContinue = false;
-    
-    if (_repetitionCounter < maxRepetitions){
-
-    }else{
-      boolContinue = await showContinueDialog(context);
-    }
-
+    maxRepetitions = currentStep.repetitions;
     setState(() {
       
       
@@ -200,14 +235,9 @@ class _StudyRunnerState extends State<StudyRunner> {
         print("repeat step");
         _repetitionCounter++;
       } else {
-        if ( boolContinue == null || boolContinue == false){
-          _repetitionCounter = 1;
-          _nextStep();
-        } else {
-          _repetitionCounter++;
-          currentStep.repetitions++;
-          _stepsTotal++;
-        }
+        _repetitionCounter = 1;
+        _nextStep();
+  
 
       }
     });
@@ -276,6 +306,10 @@ class _StudyRunnerState extends State<StudyRunner> {
           );
         }
 
+        if(_currentIndex <0) {
+          return TestSelectionScreen(onSmileTest: onSmileTest, onHeadTurnTest: onHeadTurnTest, onArmMovementTest: onTapTest,t: widget.protocol.t, onLeaveStudy: _leaveStudy,);
+        } else {
+
         final step = _steps[_currentIndex];
         if (step.type == StudyStepType.instruction) {
           return EarbudSealTestScreen(
@@ -313,22 +347,19 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
 
         if (step.type == StudyStepType.ending) {
-          return SummaryScreen(onLeaveStudy: _leaveStudy,);
+          return SummaryScreen(onLeaveStudy: _leaveStudy, t: widget.protocol.t,);
         }
         
         if ( step.type == StudyStepType.measuringTap) {
-          var instruction = [widget.protocol.t(
-          "Instruct the patient double-tap the left Earable with the right Hand twice",
-          "Den Patienten anweisen, das linke Earable mit der rechten Hand zweimal schnell hintereinander anzutippen"),];
+          final random = Random();
+          int index = random.nextInt(2);
+          var instruction = _steps[_currentIndex].measuringInstructions[index];
           Side soundside = Side.left;
-          if (_repetitionCounter % 2 == 1) {
-            soundside = Side.right;
-            instruction = [
-              widget.protocol.t(
-                "Instruct the patient double-tap the right Earable with the left Hand",
-                "Den Patienten anweisen, das rechte Earable mit der linken Hand zweimal schnell hintereinander anzutippen"
-              ),
-            ];
+          switch (index) {
+            case 0:
+              soundside = Side.right;
+            case 1:
+              soundside = Side.left;
           }
           return MeasuringScreen(
             repetitions: step.repetitions,
@@ -342,7 +373,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             logger: _logger, 
             recordingId: widget.protocol.sessionId, 
             taskName: step.heading, 
-            instruction: instruction[0],
+            instruction: instruction,
             playSound: step.playSound,
             soundSide: soundside,
             t: widget.protocol.t,
@@ -354,16 +385,15 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
 
         if (step.type == StudyStepType.measuringHead) {
-          var instruction = widget.protocol.t(
-          "Instruct the patient to start with the head in a neutral position, then turn it to the right, back to neutral, and then to the left, and back to neutral.",
-          "Den Patienten anweisen, den Kopf zunächst in die neutrale Position zu bringen, dann nach rechts zu drehen, zurück zur Neutralstellung und anschließend nach links und zurück zur Neutralstellung" );
-          if (_repetitionCounter % 2 == 1) {
-            instruction = 
-              widget.protocol.t(
-          "Instruct the patient to start with the head in a neutral position, then turn it to the left, back to neutral, and then to the right, and back to neutral.",
-          "Den Patienten anweisen, den Kopf zunächst in die neutrale Position zu bringen, dann nach links zu drehen, zurück zur Neutralstellung und anschließend nach rechts und zurück zur Neutralstellung."
-          )
-            ;
+          final random = Random();
+          int index = random.nextInt(2);
+          var instruction = _steps[_currentIndex].measuringInstructions[index];
+          Side soundside = Side.left;
+          switch (index) {
+            case 0:
+              soundside = Side.right;
+            case 1:
+              soundside = Side.left;
           }
 
           return MeasuringScreen(
@@ -397,7 +427,7 @@ class _StudyRunnerState extends State<StudyRunner> {
               ),
             ),
           );
-        
+        }
       },
     );
   }

@@ -42,7 +42,7 @@ List<AppInfo> _apps = [
         ),
       );
     },),
-  ),*/
+  ),
   AppInfo(
     logoPath: "lib/apps/stroke_tracker/assets/logo.png",
     title: "Audio Response",
@@ -53,7 +53,7 @@ List<AppInfo> _apps = [
         return AudioResponseMeasurementView(manager: wearable.requireCapability<AudioResponseManager>());
       },
     ),
-  ),
+  ),*/
   AppInfo(
     logoPath: "lib/apps/stroke_tracker/assets/logo.png",
     title: "Stroke Data Collection",

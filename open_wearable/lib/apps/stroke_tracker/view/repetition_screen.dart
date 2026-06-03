@@ -72,6 +72,7 @@ class TaskScreen extends StatefulWidget{
   final String currentStepTask;
   final ExperimentLogger logger;
   final ExperimentManager manager;
+  final VoidCallback addRepetition;
   final int stepsDone;
   final int stepsTotal;
   final Future<void> Function() onLeaveStudy;
@@ -89,6 +90,7 @@ class TaskScreen extends StatefulWidget{
     required this.manager,
     required this.stepsDone,
     required this.stepsTotal,
+    required this.addRepetition,
   });
 
   @override
@@ -209,7 +211,10 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
 
             const SizedBox(height: 30),
-            _likertWidget,
+            Padding(padding: EdgeInsetsGeometry.only(left: 20,right: 20),
+              child: _likertWidget,
+            )
+            ,
             if (score >= 4) _buildSideSelector(),
             if (!canGoNext())
               Padding(
@@ -227,14 +232,33 @@ class _TaskScreenState extends State<TaskScreen> {
                 ),
               ),
             const SizedBox(height: 20),
+            if (widget.currentRepetition < widget.maxRepetition)
             ElevatedButton(
               onPressed: canGoNext() ? pressExitButton : null,
               child: Text(
-                widget.currentRepetition < widget.maxRepetition
-                    ? t("Start/Repeat Task", "Starten/Wiederholen")
-                    : t("Done", "Fertig"),
+                 t("Start/Repeat Task", "Nächse Wiederholung Starten")
               ),
             ),
+            if (widget.currentRepetition >= widget.maxRepetition)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                onPressed: canGoNext() ? () {
+                    widget.addRepetition();
+                    pressExitButton();
+                   }  : null,
+                child: Text(
+                  t("Start/Repeat Task", "Nächste Wiederholung Starten")
+                ),),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: canGoNext() ? pressExitButton : null,
+                  child: Text(
+                    t("Start/Repeat Task", "Zur Nächsten Aufgabe")
+                  ),)
+              ],
+            )
           ],
         ),
       ),
@@ -264,8 +288,8 @@ class _TaskScreenState extends State<TaskScreen> {
         const SizedBox(height: 20),
         Text(
                 t(
-          "Which side is the impairment (From perspective of the patient)?",
-          "Welche Seite ist betroffen (aus Sicht des Patienten)?"
+          "Which side is the impairment (From perspective of the Proband)?",
+          "Welche Gesichtshälfte ist betroffen (Sicht des Probanden)?"
         ),
           style: TextStyle(fontSize: 18),
         ),
@@ -303,7 +327,10 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
+
+
   void pressExitButton(){
+    
     widget.logger.logOtherEvent(widget.currentRepetition, "Evaluation", widget.currentStepTask, score.toString());
     if(selectedSide != null && score >= 4) {
       widget.logger.logOtherEvent(widget.currentRepetition, "Side of impairment", widget.currentStepTask, selectedSide.toString().split(".").last);

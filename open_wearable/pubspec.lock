@@ -532,10 +532,10 @@ packages:
     dependency: transitive
     description:
       name: json_annotation
-      sha256: "805fa86df56383000f640384b282ce0cb8431f1a7a2396de92fb66186d8c57df"
+      sha256: "2a743920d81b7910627f68ee2c9ac1fc0bfee32b9fc3403587d7c6791ca12f80"
       url: "https://pub.dev"
     source: hosted
-    version: "4.10.0"
+    version: "4.12.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -660,11 +660,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: seal_check
-      resolved-ref: "8341d6a3332c6ccd4c3f6a98f060cc43f617fd10"
+      ref: "123-feature/seal_check"
+      resolved-ref: "025ea53d3d7eb469b1c3b3854bf6c51cd52e58c3"
       url: "https://github.com/OpenEarable/open_earable_flutter.git"
     source: git
-    version: "2.3.4"
+    version: "2.3.6"
   open_file:
     dependency: "direct main"
     description:

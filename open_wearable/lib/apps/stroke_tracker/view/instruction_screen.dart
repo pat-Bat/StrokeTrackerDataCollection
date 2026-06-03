@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/repetition_screen.dart';
@@ -15,6 +16,7 @@ class EarbudSealTestScreen extends StatefulWidget {
   final int currentStepNumber;
   final int currentRepetitionNumber;
   final String sessionId;
+  
   final int stepsDone;
   final int stepsTotal;
 
@@ -32,271 +34,390 @@ class EarbudSealTestScreen extends StatefulWidget {
     required this.currentRepetitionNumber,
     required this.currentStepNumber,
     required this.sessionId,
-  
+
   });
 
   @override
   _EarbudSealTestScreenState createState() => _EarbudSealTestScreenState();
 }
 
+enum EarStep { left, right, ring, done }
+
 class _EarbudSealTestScreenState extends State<EarbudSealTestScreen> {
   Map<String, dynamic>? leftResult;
   Map<String, dynamic>? rightResult;
 
-  bool isMeasuringLeft = false;
-  bool isMeasuringRight = false;
+  bool isMeasuring = false;
+  bool ringConfirmed = false;
+  bool alertRing = false;
+  EarStep step = EarStep.left;
 
-  void checkSeal(Side side) async{
-    setState(() {
-      if (side == Side.left) {
-        isMeasuringLeft = true;
-      } else {
-        isMeasuringRight = true;
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
 
-    // Simulate a delay for measurement
-    if(isMeasuringLeft){
-      leftResult = await widget.sealCheck(true);
-      print(leftResult);
-      setState(() {
-        isMeasuringLeft = false;
-      });
-    } else {
-      rightResult = await widget.sealCheck(false);
-      print(rightResult);
-      setState(() {
-      isMeasuringRight = false;});
-    }
-
-  }
-
-  Future<void> _onLeavePressed() async {
-    final shouldLeave = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(widget.t("Leave Study", "Studie verlassen")),
-          content: Text(
-            widget.t(
-              "Are you sure you want to leave? Your progress may be lost.",
-              "Sind Sie sicher, dass Sie die Studie verlassen möchten? Ihr Fortschritt könnte verloren gehen.",
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(widget.t("Cancel", "Abbrechen")),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(widget.t("Leave", "Verlassen")),
-            ),
-          ],
-        );
-      },
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
     );
+  }
 
-    if (shouldLeave == true) {
-      widget.onLeaveStudy();
+  Future<void> checkSeal(bool isLeft) async {
+  setState(() => isMeasuring = true);
+
+  final result = await widget.sealCheck(isLeft);
+
+  setState(() {
+    isMeasuring = false;
+    if (isLeft) {
+      leftResult = result;
+    } else {
+      rightResult = result;
+    }
+
+  });
+}
+
+  void nextStep() {
+    switch (step) {
+      case EarStep.left:
+        setState(() {
+          step = EarStep.right;
+        });
+      case EarStep.right:
+        setState(() {
+          step = EarStep.ring;
+        });
+      case EarStep.ring:
+        setState(() {
+          if(ringConfirmed) {
+            step = EarStep.done;
+          } else {
+            alertRing = true;
+          }
+        });
+      case EarStep.done:
     }
   }
-  void resetResults() {
+
+  void pressRingConfirmation() {
     setState(() {
-      leftResult = null;
-      rightResult = null;
-      isMeasuringLeft = false;
-      isMeasuringRight = false;
+      ringConfirmed = true;
     });
+    
   }
 
-  void goNext() async{
-    await widget.logger.startLogging(false, widget.sessionId);
-    widget.logger.logOtherEvent(
-      widget.currentRepetitionNumber, "Sealquality", "${widget.currentStepNumber}",
-       "left: ${leftResult?['quality']}, right${rightResult?['quality']}");
-    await widget.logger.stopAndWriteLogging(false);
-    widget.onNext();
-  }
+  bool get canContinue => leftResult != null && rightResult != null;
+  @override
+Widget build(BuildContext context) {
+  return PopScope(
+    canPop: false,
+    child: Scaffold(
+      
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(widget.t("Earbud Setup", "Ohrhörer Einrichtung")),
+      ),
 
-  Widget _buildResultCard(Map<String, dynamic> result) {
-  final theme = Theme.of(context);
-  double quality = 0;
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
 
-  Map<String, dynamic>? firstPeak;
-  if (result['points'].isNotEmpty) {
-    firstPeak = result['points'].first.cast<String, dynamic>();
-  
-    (firstPeak!['magnitude'] as num?)?.toDouble() == null ? null :  quality = (firstPeak!['magnitude'] as num?)!.toDouble();
-  } else {
-    firstPeak = null; // or provide a default
-  }
-  
-  return Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Text(
-            widget.t('Quality', 'Qualität') + ': ',
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+            
+            LinearProgressIndicator(
+              value: step == EarStep.left
+                  ? 0.33
+                  : step == EarStep.right
+                      ? 0.66
+                      : 1.0,
+            ),
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildStep(),
+                ),
+              ),
+            ),
+
+            
+            _buildBottomButton(),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildBottomButton() {
+  switch (step) {
+
+    case EarStep.left:
+      return const SizedBox.shrink();
+
+    case EarStep.right:
+      return const SizedBox.shrink();
+
+    case EarStep.ring:
+      return const SizedBox.shrink();
+
+    case EarStep.done:
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: canContinue ? widget.onNext : null,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: Text(widget.t("Continue", "Weiter")),
           ),
+        ),
+      );
+  }
+}
+
+
+Widget _buildStep() {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+
+      _buildStepCard(),
+
+      const SizedBox(height: 20),
+
+      if (leftResult != null)
+        _buildResultCard(widget.t("Left Ear","Linkes Ohr"), leftResult!),
+
+      if (rightResult != null)
+        _buildResultCard(widget.t("Right Ear","Rechtes Ohr"), rightResult!),
+      
+      if(ringConfirmed == true)
+        _buildRingResultCard(),
+    ],
+  );
+}
+
+Widget _buildStepCard() {
+  switch (step) {
+
+    case EarStep.left:
+      return _buildActionCard(
+        title: widget.t("Left Ear","Linkes Ohr"),
+        subtitle: widget.t(
+          "Place left earbud and start test",
+          "Linken Ohrhörer einsetzen und testen. Falls die Qualität unter 70 ist versuchen Sie den Hörer besser einzusetzen. Verbessert sich dieser Wert mehrfach nicht können sie fortfahren.",
+        ),
+        isLoading: isMeasuring,
+        onTap: () => checkSeal(true),
+      );
+
+    case EarStep.right:
+      return _buildActionCard(
+        title: widget.t("Right Ear","Rechtes Ohr"),
+        subtitle: widget.t(
+          "Now test the right earbud",
+          "Rechten Ohrhörer einsetzen und testen. Falls die Qualität unter 70 ist versuchen Sie den Hörer besser einzusetzen. Verbessert sich dieser Wert mehrfach nicht können sie fortfahren.",
+        ),
+        isLoading: isMeasuring,
+        onTap: () => checkSeal(false),
+      );
+
+    case EarStep.ring:
+      return _buildRingActionCard(onTap: pressRingConfirmation);
+
+    case EarStep.done:
+      return const Icon(Icons.check_circle, color: Colors.green, size: 80);
+  }
+}
+Widget _buildActionCard({
+  required String title,
+  required String subtitle,
+  required bool isLoading,
+  required VoidCallback onTap,
+}) {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+
           Text(
-            widget.t('Quality should be above 100. Quality: $quality', 'Qualität sollte über 100 sein. Qualität: $quality'),
-            style: theme.textTheme.bodyMedium,
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            height: 50,
+            width: 400,
+            child: Center(
+              child: isLoading
+                  ? const CircularProgressIndicator()
+                  : Row(
+                      children: [
+
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: onTap,
+                            child: const Text("Test Starten"),
+                          ),
+                        ),
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                (step == EarStep.left && leftResult == null) ||
+                                        (step == EarStep.right &&
+                                            rightResult == null)
+                                    ? null
+                                    : nextStep,
+                            child: Text(
+                              widget.t(
+                                "Next Step",
+                                "Nächster Schritt",
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),
     ),
   );
 }
+Widget _buildResultCard(String label, Map<String, dynamic> result) {
+  final quality = (result['quality'] ?? 0).toString();
 
-  Widget _buildEarbudSection(Side side, bool isMeasuring, Map<String, dynamic>? result) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ElevatedButton(
-          onPressed: (isMeasuringLeft || isMeasuringRight) ? null : () => checkSeal(side),
-          child: Text(widget.t(
-            side == Side.left ? "Check Left Earbud" : "Check Right Earbud",
-            side == Side.left ? "Linkes Ohr prüfen" : "Rechtes Ohr prüfen",
-          )),
+  return Card(
+    color: Colors.green.shade50,
+    child: ListTile(
+      leading: const Icon(Icons.hearing, color: Colors.green),
+      title: Text(label),
+      subtitle: Text(
+        widget.t(
+          "Quality: $quality/100",
+          "Qualität: $quality/100",
         ),
-        const SizedBox(height: 8),
-        if (isMeasuring)
-          Center(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                const CircularProgressIndicator(),
-                const SizedBox(height: 8),
-                Text(widget.t("Measuring...", "Messung läuft...")),
-                const SizedBox(height: 16),
-              ],
-            ),
-          )
-        else if (result != null)
-          _buildResultCard(result),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
+      ),
+    ),
+  );
+}
 
-  @override
-Widget build(BuildContext context) {
-  final bool canContinue = leftResult != null && rightResult != null;
+Widget _buildRingResultCard() {
 
-  return PopScope(
-    canPop: false,
-    child: Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${widget.t("Step", "Schritt")} ${widget.stepsDone} / ${widget.stepsTotal}'),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: widget.stepsDone/widget.stepsTotal,
-              backgroundColor: Colors.grey[300],
-              color: Colors.blue,
-            ),
-          ],
+  return Card(
+    color: Colors.green.shade50,
+    child: ListTile(
+      leading: const Icon(Icons.trip_origin, color: Colors.green),
+      title: Text(widget.t("Ring Placement", "Ringplatzierung")),
+      subtitle: Text(
+        widget.t(
+          "Confirmed",
+          "Bestätigt",
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _onLeavePressed,
+      ),
+    ),
+  );
+}
+
+Widget _buildRingActionCard({required VoidCallback onTap}) {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+
+          Text(
+            widget.t("Place the ring", "Ringplatzierung"),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.t("Upcoming Task:", "Aufkommende Aufgabe:"),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Text(widget.description,
-                          style: const TextStyle(fontSize: 18, color: Colors.black87)),
-                    ),
-                    const SizedBox(height: 24),
-                    // Füge dies im SingleChildScrollView ein, direkt nach der Beschreibung
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.yellow[100], // Hinweisfarbe
-                        border: Border.all(color: Colors.orange),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Text(
-                        widget.t(
-                          "Please make sure to wear the left and right earbuds in the correct ear and the ring on a finger of the right hand of the participant before starting the test.",
-                          "Bitte setze die linken und rechten Ohrhörer im richtigen Ohr ein und achte darauf das der Ring an einem Finger der rechten Hand des Teilnehmers sitzt, bevor du den Test startest.",
-                        ),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    _buildEarbudSection(Side.left, isMeasuringLeft, leftResult),
-                    _buildEarbudSection(Side.right, isMeasuringRight, rightResult),
-                    if (!canContinue)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          widget.t(
-                            "Please test both earbuds before continuing.",
-                            "Bitte teste beide Ohrhörer, bevor du fortfährst.",
+          const SizedBox(height: 10),
+
+          Text(
+            widget.t("Place the ring on the index finger of the righ hand", "Platzieren Sie den Ring an dem Zeigefinger der rechten Hand des Probanden."),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 16),
+          if(alertRing)
+          Text(widget.t("Make sure to place the ring and confirm the placement", "Stellen Sie sicher, dass der Ring angebracht ist und bestätigen Sie die Platzierung"),
+          style: TextStyle(color: Colors.red),
+          ),
+
+          SizedBox(
+            height: 50,
+            width: 400,
+            child: Center(
+              child: 
+                  Row(
+                      children: [
+
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: onTap,
+                            child: Text(widget.t("Confirm Ring placement", "Ringplatzierung bestätigen"),
+                            textAlign: TextAlign.center,
+                            ),
                           ),
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: resetResults,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.grey[400],
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                (step == EarStep.left && leftResult == null) ||
+                                        (step == EarStep.right &&
+                                            rightResult == null)
+                                    ? null
+                                    : nextStep,
+                            child: Text(
+                              widget.t(
+                                "Next Step",
+                                "Nächster Schritt",
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(widget.t("Reset Results", "Ergebnisse zurücksetzen")),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canContinue ? goNext : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(widget.t("Continue", "Weiter")),
-                  ),
-                ),
-              ],
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );

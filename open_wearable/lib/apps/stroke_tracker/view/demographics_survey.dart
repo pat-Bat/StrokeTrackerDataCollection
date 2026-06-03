@@ -66,7 +66,7 @@ class _DemographicsSurveyState extends State<DemographicsSurvey> {
     return PopScope(
       canPop: true,
       child: PlatformScaffold(
-      appBar: PlatformAppBar(title: PlatformText(t("Fill out the Survey", "Fragebogen ausfüllen")),),
+      appBar: PlatformAppBar(title: PlatformText(t("Fill out the Survey", "Füllen Sie den Fragebogen aus")),),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(10),
         child: Column(
@@ -78,12 +78,12 @@ class _DemographicsSurveyState extends State<DemographicsSurvey> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    t("How old are you?", "Wie alt sind Sie?"),
+                    t("How old are you?", "Alter des Probanden"),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   SizedBox(height: 8),
                   Text(
-                    t("Please enter your age in years", "Bitte geben Sie Ihr Alter in Jahren ein"),
+                    t("Please enter your age in years", "Bitte geben Sie das Alter des Probanden in Jahren an"),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   SizedBox(height: 12),
@@ -117,7 +117,7 @@ class _DemographicsSurveyState extends State<DemographicsSurvey> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      t("What is your biological gender?", "Was ist Ihr biologisches Geschlecht?"),
+                      t("What is your biological gender?", "Was ist das biologische Geschlecht des Probanden?"),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     SizedBox(height: 12),
@@ -147,7 +147,7 @@ class _DemographicsSurveyState extends State<DemographicsSurvey> {
                   Text(
                     t(
                       "Do you have any conditions or limitations that could affect your ability to perform this study (e.g., turning your neck, smiling, or using both hands and arms)?",
-                      "Haben Sie gesundheitliche Einschränkungen oder Beschwerden, die Ihre Fähigkeit zur Durchführung dieser Studie beeinträchtigen könnten (z. B. Kopf drehen, lächeln oder beide Hände und Arme benutzen)?"
+                      "Hat der Proband gesundheitliche Einschränkungen oder Beschwerden, welche die Fähigkeit zur Durchführung dieser Studie beeinträchtigen könnte (z. B. Schmerzen oder Bewegungseinschränkungen beim Kopfdrehen, beim Lächeln oder beim Bewegen des Arms zum gegenüberliegenden Ohr)?"
                     ),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),

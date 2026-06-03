@@ -4,7 +4,6 @@ import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/manager.dart';
 import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 import 'package:flutter/services.dart';
-import 'package:open_wearable/apps/stroke_tracker/view/sealcheck.dart';
 
 
 class MeasuringScreen extends StatefulWidget {
@@ -64,7 +63,7 @@ class _MeasuringScreenState extends State<MeasuringScreen> {
 
   Future<void> playLeft() async {
   await widget.manager.playSound(left:true);
-}
+} 
 
   Future<void> _onLeavePressed() async {
     final shouldLeave = await showDialog<bool>(
@@ -106,17 +105,33 @@ Future<void> playRight() async {
     super.initState();
     t = widget.t;
     countdown = widget.timer;
+
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
   }
 
   Future<void> _startRecording() async {
     
     if (isStarting) return;
 
-  setState(() {
-    isStarting = true;
-  });
+    setState(() {
+      isStarting = true;
+    });
     
-    await widget.startMeasuring(widget.useRing);
+    try {
+        await widget.startMeasuring(widget.useRing).timeout(
+          const Duration(seconds: 10),
+        );
+      } catch (e) {
+        debugPrint("stopMeasuring timed out: $e");
+        await widget.stopMeasuring().timeout(const Duration(seconds: 5),);
+        setState(() {
+          isStarting = false;
+        });
+        return;
+      }
+
     if (widget.playSound) {
       if(widget.soundSide == Side.right) {
         playRight();
@@ -171,18 +186,6 @@ Future<void> playRight() async {
               },
               child: Text(t("Save", "Speichern")),
             ),
-            ElevatedButton(
-              onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SimpleSealCheckScreen(
-                    t: t,
-                    sealCheck: widget.manager.runSealCheck,
-                  ),
-                ),
-              );},
-              child:  Text(t("Sealcheck", "Verschlusstest")))
           ],
         );
       },
@@ -199,7 +202,7 @@ Future<void> playRight() async {
         widget.instruction,
         "Recording_Stop",
       );
-    widget.stopMeasuring();
+    await widget.stopMeasuring();
     setState(() {
       recording = false;
     });
@@ -309,34 +312,11 @@ Future<void> playRight() async {
                           SizedBox(height: 8),
                           Text(
                             widget.instruction,
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.left,
                             style: TextStyle(
                               color: Colors.black87,
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Divider(color: Colors.grey.shade300),
-                          SizedBox(height: 12),
-                          Text(
-                            "Patient",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            t(
-                              "Look at the camera and follow the instruction",
-                              "Schauen Sie in die Kamera und folgen Sie der Anweisung"
-                            ),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontSize: 16,
                             ),
                           ),
                         ],
