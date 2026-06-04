@@ -54,7 +54,7 @@ class StudyRunner extends StatefulWidget {
 class _StudyRunnerState extends State<StudyRunner> {
   late final List<StudyStep> _steps;
   int _currentIndex = -1;
-  
+  String currentInstruction = "";
   int _stepsDone = 0;
   int _stepsTotal = 0;
   int _repetitionCounter = 1;
@@ -222,6 +222,7 @@ class _StudyRunnerState extends State<StudyRunner> {
       currentStepTask: _steps[_currentIndex].heading,
       translate: widget.protocol.t,
       addRepetition: addRepetition,
+      instruction: currentInstruction,
       ),
       
     ),
@@ -329,6 +330,7 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
 
         if (step.type == StudyStepType.cameraMeasurement) {
+          currentInstruction = "SmileTask";
           return CameraMeasuringScreen(
             currentRepetition: _repetitionCounter,
             onLeaveStudy: _leaveStudy,
@@ -361,6 +363,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             case 1:
               soundside = Side.left;
           }
+          currentInstruction = "DoubleTap ${soundside.toString().split(".")[1]} Earable";
           return MeasuringScreen(
             repetitions: step.repetitions,
             stepsDone: _stepsDone,
@@ -395,6 +398,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             case 1:
               soundside = Side.left;
           }
+          currentInstruction = "Headturn Start at ${soundside.toString().split(".")[1]} the other side";
 
           return MeasuringScreen(
             stepsDone: _stepsDone,

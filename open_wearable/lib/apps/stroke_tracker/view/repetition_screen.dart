@@ -70,6 +70,7 @@ class TaskScreen extends StatefulWidget{
   final int maxRepetition;
   final int currentStepNumber;
   final String currentStepTask;
+  final String instruction;
   final ExperimentLogger logger;
   final ExperimentManager manager;
   final VoidCallback addRepetition;
@@ -91,6 +92,7 @@ class TaskScreen extends StatefulWidget{
     required this.stepsDone,
     required this.stepsTotal,
     required this.addRepetition,
+    required this.instruction
   });
 
   @override
@@ -233,13 +235,6 @@ class _TaskScreenState extends State<TaskScreen> {
               ),
             const SizedBox(height: 20),
             if (widget.currentRepetition < widget.maxRepetition)
-            ElevatedButton(
-              onPressed: canGoNext() ? pressExitButton : null,
-              child: Text(
-                 t("Start/Repeat Task", "Nächse Wiederholung Starten")
-              ),
-            ),
-            if (widget.currentRepetition >= widget.maxRepetition)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -258,7 +253,15 @@ class _TaskScreenState extends State<TaskScreen> {
                     t("Start/Repeat Task", "Zur Nächsten Aufgabe")
                   ),)
               ],
-            )
+            ),
+            if (widget.currentRepetition >= widget.maxRepetition)
+            
+                ElevatedButton(
+                  onPressed: canGoNext() ? pressExitButton : null,
+                  child: Text(
+                    t("Start/Repeat Task", "Zur Nächsten Aufgabe")
+                  ),)
+              
           ],
         ),
       ),
@@ -329,12 +332,10 @@ class _TaskScreenState extends State<TaskScreen> {
 
 
 
-  void pressExitButton(){
+  Future<void> pressExitButton() async{
     
-    widget.logger.logOtherEvent(widget.currentRepetition, "Evaluation", widget.currentStepTask, score.toString());
-    if(selectedSide != null && score >= 4) {
-      widget.logger.logOtherEvent(widget.currentRepetition, "Side of impairment", widget.currentStepTask, selectedSide.toString().split(".").last);
-    }
+    widget.logger.logLabel(widget.currentStepNumber,score,selectedSide,widget.currentRepetition,widget.instruction);
+    await widget.logger.stopAndWriteLogging(false);
     Navigator.of(context).pop();
   }
 

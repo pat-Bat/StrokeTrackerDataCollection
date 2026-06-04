@@ -35,7 +35,7 @@ class StudyProtocol {
   ),
   StudyStep(
     type: StudyStepType.cameraMeasurement,
-    repetitions: 3,
+    repetitions: 15,
   ),
   StudyStep(
     type: StudyStepType.instruction,
@@ -50,20 +50,22 @@ class StudyProtocol {
     measuringInstructions: [
       t(
         "Instruct the patient to start with the head in a neutral position, then turn it to the right, back to neutral, and then to the left, and back to neutral.",
+        "Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf in eine für Sie gerade Position.\"\n"
         "1. Starten Sie die Aufnahme.\n"
-        "2. Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf zunächst in eine für Sie gerade Position. Drehen Sie anschließend Ihren Kopf nach rechts und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach links und zurück zur Mitte.\"\n"
+        "2. Lesen Sie vor: \"Drehen Sie Ihren Kopf nach rechts und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach links und zurück zur Mitte.\"\n"
         "3. Vergewissern Sie sich, dass der Proband die Bewegung vollständig ausgeführt hat.\n"
         "4. Stoppen Sie die Aufnahme."
       ),
       t(
         "Instruct the patient to start with the head in a neutral position, then turn it to the left, back to neutral, and then to the right, and back to neutral.",
+        "Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf in eine für Sie gerade Position.\"\n"
         "1. Starten Sie die Aufnahme.\n"
-        "2. Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf zunächst in eine für Sie gerade Position. Drehen Sie anschließend Ihren Kopf nach links und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach rechts und zurück zur Mitte.\"\n"
+        "2. Lesen Sie vor: \"Drehen Sie Ihren Kopf nach links und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach rechts und zurück zur Mitte.\"\n"
         "3. Vergewissern Sie sich, dass der Proband die Bewegung vollständig ausgeführt hat.\n"
         "4. Stoppen Sie die Aufnahme."
       ),
     ],
-    repetitions: 3,
+    repetitions: 15,
   ),
   StudyStep(
     type: StudyStepType.instruction,
@@ -78,22 +80,22 @@ class StudyProtocol {
     measuringInstructions: [
       t(
         "Instruct the patient double-tap the right Earable with the left Hand twice",
+        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihnren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\""
         "1. Starten Sie die Aufnahme.\n"
-        "2. Lesen Sie vor: \"Bitte tippen Sie mit Ihrer linken Hand zweimal kurz hintereinander auf den rechten Ohrhörer.\"\n"
-        "3. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
-        "4. Stoppen Sie die Aufnahme."
+        "2. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
+        "3. Stoppen Sie die Aufnahme."
       ),
       t(
-        "Instruct the patient double-tap the left Earable with the right Hand twice",
+        "Instruct the patient double-tap the right Earable with the left Hand twice",
+        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihnren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\""
         "1. Starten Sie die Aufnahme.\n"
-        "2. Lesen Sie vor: \"Bitte tippen Sie mit Ihrer rechten Hand zweimal kurz hintereinander auf den linken Ohrhörer.\"\n"
-        "3. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
-        "4. Stoppen Sie die Aufnahme."
+        "2. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
+        "3. Stoppen Sie die Aufnahme."
       ),
     ],
     playSound: true,
     soundside: Side.right,
-    repetitions: 6,
+    repetitions: 30,
   ),
     StudyStep(type: StudyStepType.ending),
     ];

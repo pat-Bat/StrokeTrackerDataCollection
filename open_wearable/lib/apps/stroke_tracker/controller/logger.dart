@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:csv/csv.dart';
 import 'package:face_detection_tflite/face_detection_tflite.dart';
 import 'package:flutter/material.dart';
+import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:typed_data';
 
 /// Represents a single step event
 class StepEvent {
@@ -87,6 +89,32 @@ class SyncEvent {
   }
 }
 
+class LabelEvent {
+  final int labelValue;
+  final int taskID;
+  final int repetition;
+  final Side? symptomSide;
+  final String instruction;
+  LabelEvent({
+    required this.labelValue,
+    required this.taskID,
+    required this.repetition,
+    required this.instruction,
+    required this.symptomSide
+  });
+
+  List<String> toCsvRow(String sessionID) {
+    return [
+      sessionID, 
+      taskID.toString(),
+      repetition.toString(),
+      instruction,
+      labelValue.toString(),
+      symptomSide.toString()
+    ];
+  }
+}
+
 /// Logger for ExperimentManager
 class ExperimentLogger extends ChangeNotifier{
   static const String _stepsCsvHeader =
@@ -94,18 +122,22 @@ class ExperimentLogger extends ChangeNotifier{
   static const String _otherCsvHeader =
       'SessionID,Block,Task,Time,RelativeTimeMS,EventType,Value';
 
+  static const String _labelCsvHeader =
+    'SessionID,TaskID,Repetition,instruction,Value,Impairmentside';
   static const String _syncCsvHeader =
     'SessionID,DeviceTimestamp,PhoneTimestamp,RelativePhoneTimeMS,Side';
 
   late File _syncCsvFile;
   late File _stepsCsvFile;
   late File _otherCsvFile;
+  late File _labelCsvFile;
 
   late String sessionID;
   late DateTime _sessionStartTime;
   final List<(SyncEvent, String)> _syncEvents = [];
   final List<StepEvent> _stepEvents = [];
   final List<OtherEvent> _otherEvents = [];
+  final List<LabelEvent> _label = [];
 
   File get csvFile => _stepsCsvFile;
 
@@ -113,22 +145,26 @@ class ExperimentLogger extends ChangeNotifier{
     sessionID = newSessionID;
     final dir = await getApplicationDocumentsDirectory();
 
-    if (!sync) {
+    
       _stepsCsvFile = File('${dir.path}/steps_log.csv');
       _otherCsvFile = File('${dir.path}/other_log.csv');
       _syncCsvFile = File('${dir.path}/sync_log.csv');
-    }
+      _labelCsvFile = File('${dir.path}/label_log.csv');
+    
     if (!await _syncCsvFile.exists()) {
       await _syncCsvFile.writeAsString(_syncCsvHeader);
     }
     if (!await _stepsCsvFile.exists()){
-      _stepsCsvFile.writeAsString(_stepsCsvHeader);
+      await _stepsCsvFile.writeAsString(_stepsCsvHeader);
     }
 
     if (!await _otherCsvFile.exists()){
-      _otherCsvFile.writeAsString(_otherCsvHeader);
+      await _otherCsvFile.writeAsString(_otherCsvHeader);
     }
 
+    if (!await _labelCsvFile.exists()){
+      await _labelCsvFile.writeAsString(_labelCsvHeader);
+    }
     _sessionStartTime = DateTime.now();
   }
   void logSyncLeftEvent(int deviceTimestamp) {
@@ -178,6 +214,16 @@ class ExperimentLogger extends ChangeNotifier{
     _otherEvents.add(event);
   }
 
+  void logLabel(
+    int taskID,
+    int value,
+    Side? side,
+    int repetition,
+    String instruction
+  ) {
+    final event = LabelEvent(labelValue: value, taskID: taskID, repetition: repetition, symptomSide: side, instruction: instruction);
+    _label.add(event);
+  }
 
   void logTaskStart(
     int blockNumber,
@@ -222,7 +268,7 @@ class ExperimentLogger extends ChangeNotifier{
 
     final syncCsvData = converter.convert(syncRows);
 
-    if (!sync) {
+    
       final stepsRows = <List<String>>[];
       for (final e in _stepEvents) {
         stepsRows.add(e.toCsvRow(sessionID));
@@ -232,19 +278,32 @@ class ExperimentLogger extends ChangeNotifier{
         otherRows.add(e.toCsvRow(sessionID));
       }
 
+      final labelRows = <List<String>>[];
+      for (final e in _label) {
+        labelRows.add(e.toCsvRow(sessionID));
+      }
+
+
       final stepsCsvData = converter.convert(stepsRows);
       final otherCsvData = converter.convert(otherRows);
+      final labelCsvData = converter.convert(labelRows);
 
       await Future.wait([
+        if(stepsRows.isNotEmpty)
         _stepsCsvFile.writeAsString("\n$stepsCsvData", mode: FileMode.append),
+        if(otherRows.isNotEmpty)
         _otherCsvFile.writeAsString("\n$otherCsvData", mode: FileMode.append),
+        if(syncRows.isNotEmpty)
         _syncCsvFile.writeAsString("\n$syncCsvData", mode: FileMode.append),
+        if(labelRows.isNotEmpty)
+        _labelCsvFile.writeAsString("\n$labelCsvData", mode: FileMode.append),
       ]);
-    }
+    
 
     _stepEvents.clear();
     _otherEvents.clear();
     _syncEvents.clear();
+    _label.clear();
   }
 
   /// Get all log files in the documents directory
@@ -322,10 +381,10 @@ class ExperimentLogger extends ChangeNotifier{
 
   static String boundingBoxToString(BoundingBox box) {
     return [
-      [box.topLeft.x,box.topLeft.y,
+      box.topLeft.x,box.topLeft.y,
       box.topRight.x,box.topRight.y,
       box.bottomLeft.x,box.bottomLeft.y,
-      box.bottomRight.x,box.bottomRight.y]
+      box.bottomRight.x,box.bottomRight.y
       
     ].join(',');
   }
@@ -352,6 +411,8 @@ class ExperimentLogger extends ChangeNotifier{
   String sessionId,
   int repetition,
   ) async {
+    await logFaceDataBinary(faces, sessionId, repetition);
+    /*
     final csvRows = <String>[];
 
     for (final (time, face, height, width) in faces) {
@@ -393,8 +454,79 @@ class ExperimentLogger extends ChangeNotifier{
     }
 
     await sink.flush();
-    await sink.close();
+    await sink.close(); */
   }
+
+   static Future<void> logFaceDataBinary(
+  List<(DateTime, Face, int, int)> faces,
+  String sessionId,
+  int repetition,
+) async {
+  final dir = await getApplicationDocumentsDirectory();
+  final file = File('${dir.path}/${sessionId}_faces.bin');
+
+  final sink = file.openWrite(mode: FileMode.append);
+
+  for (final (time, face, height, width) in faces) {
+    if (face.mesh == null) continue;
+
+    final builder = BytesBuilder();
+
+    // repetition
+    final repetitionData = ByteData(4)
+      ..setInt32(0, repetition, Endian.little);
+    builder.add(repetitionData.buffer.asUint8List());
+
+    // timestamp (microseconds since epoch)
+    final timestampData = ByteData(8)
+      ..setInt64(
+        0,
+        time.microsecondsSinceEpoch,
+        Endian.little,
+      );
+    builder.add(timestampData.buffer.asUint8List());
+
+    // image dimensions
+    final dimData = ByteData(8)
+      ..setInt32(0, width, Endian.little)
+      ..setInt32(4, height, Endian.little);
+    builder.add(dimData.buffer.asUint8List());
+
+    // bounding box
+    final box = face.boundingBox;
+
+    final bboxData = Float32List.fromList([
+      box.topLeft.x,
+      box.topLeft.y,
+      box.topRight.x,
+      box.topRight.y,
+      box.bottomRight.x,
+      box.bottomRight.y,
+      box.bottomLeft.x,
+      box.bottomLeft.y
+    ]);
+
+    builder.add(bboxData.buffer.asUint8List());
+
+
+    // landmarks
+    final points = face.mesh!.points;
+
+    final landmarkData = Float32List(points.length * 2);
+
+    for (int i = 0; i < points.length; i++) {
+      landmarkData[i * 2] = points[i].x.toDouble();
+      landmarkData[i * 2 + 1] = points[i].y.toDouble();
+    }
+
+      builder.add(landmarkData.buffer.asUint8List());
+
+      sink.add(builder.takeBytes());
+    }
+
+  await sink.flush();
+  await sink.close();
+}
 
   static Future<List<File>> getAllFaceData() async {
     final directory = await getApplicationDocumentsDirectory();
@@ -402,7 +534,7 @@ class ExperimentLogger extends ChangeNotifier{
 
     try {
       await for (final entity in directory.list()) {
-        if (entity is File && entity.path.endsWith('faces.csv')) {
+        if (entity is File && (entity.path.endsWith('faces.csv') || entity.path.endsWith('faces.bin')) ) {
           files.add(entity);
         }
       }

@@ -115,7 +115,7 @@ Widget build(BuildContext context) {
       
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(widget.t("Earbud Setup", "Ohrhörer Einrichtung")),
+        title: Text(widget.t("Earbud Setup", "Einrichtung Sensoren")),
       ),
 
       body: Padding(
@@ -368,7 +368,7 @@ Widget _buildRingActionCard({required VoidCallback onTap}) {
           const SizedBox(height: 10),
 
           Text(
-            widget.t("Place the ring on the index finger of the righ hand", "Platzieren Sie den Ring an dem Zeigefinger der rechten Hand des Probanden."),
+            widget.t("Place the ring on the index finger of the right hand", "Platzieren Sie den Ring an dem Zeigefinger der rechten Hand des Probanden."),
             textAlign: TextAlign.center,
           ),
 

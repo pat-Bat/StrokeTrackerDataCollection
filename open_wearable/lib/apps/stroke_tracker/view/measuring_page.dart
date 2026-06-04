@@ -149,6 +149,7 @@ Future<void> playRight() async {
       isStarting = false;
     });
       _startTimer();
+      
       widget.logger.logOtherEvent(
         widget.currentRepetition,
         "Start Record of ${widget.taskName}",
@@ -285,11 +286,7 @@ Future<void> playRight() async {
         body: SafeArea(
           child: Column(
             children: [
-              // 🔹 Instruction Panel
-              AnimatedOpacity(
-                duration: Duration(milliseconds: 300),
-                opacity: recording ? 0.5 : 1.0,
-                child: Padding(
+              Padding(
                   padding: const EdgeInsets.all(16),
                   child: Card(
                     elevation: 3,
@@ -324,9 +321,8 @@ Future<void> playRight() async {
                     ),
                   ),
                 ),
-              ),
 
-              // 🔹 CENTER: Countdown
+        
               if (recording)
                 Expanded(
                   child: Center(
@@ -397,7 +393,7 @@ Future<void> playRight() async {
 
                     SizedBox(height: 16),
 
-                    // Repetition indicator
+              
                     Text(
                       t(
                         "Repetition ${widget.currentRepetition} / ${widget.repetitions}",

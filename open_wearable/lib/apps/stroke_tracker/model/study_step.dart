@@ -11,6 +11,7 @@ class StudyStep {
   final String pathToImage;
   final String description;
   int repetitions;
+  int repetitionsDone = 0;
   final List<String> measuringInstructions;
   final bool debugMode;
   final bool secondaryDescription;
