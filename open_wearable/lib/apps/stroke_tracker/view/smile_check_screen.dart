@@ -5,10 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:face_detection_tflite/face_detection_tflite.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/manager.dart';
-import 'package:open_wearable/apps/stroke_tracker/view/sealcheck.dart';
-//import 'package:path_provider/path_provider.dart';
 import 'package:opencv_dart/opencv_dart.dart' as cv;
-//import 'package:share_plus/share_plus.dart';
 
 class CameraMeasuringScreen extends StatefulWidget {
   final int repetitions;
@@ -18,6 +15,7 @@ class CameraMeasuringScreen extends StatefulWidget {
   final Future<void> Function(bool useRing) startMeasuring;
   final Future<void> Function() stopMeasuring;
   final Future<void> Function() dispose;
+  final String instruction;
   final String Function(String en,String de) t;
   final FaceDetectorIsolate faceDetector;
   final ExperimentLogger logger;
@@ -40,6 +38,7 @@ class CameraMeasuringScreen extends StatefulWidget {
     required this.dispose,
     required this.useRing,
     required this.manager,
+    required this.instruction,
   });
 
   @override
@@ -49,7 +48,7 @@ class CameraMeasuringScreen extends StatefulWidget {
 class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
   CameraController? _cameraController;
   Future<void>? _initializeControllerFuture;
-  bool debugimagesaved = false;
+  //bool debugimagesaved = false;
   bool recording = false;
   List<(DateTime, Face,int, int)> faceBuffer = [];
   late final String Function(String en,String de) t;
@@ -204,7 +203,8 @@ class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
       debugPrint("Fehler beim Starten der Videoaufnahme: $e");
     }
   }
-  /*
+  // Erstellt ein Bild und zeichnet alle Landmarks auf diesem mit Nummer auf 
+  /* 
   Future<void> _saveDebugMeshImage(cv.Mat mat, Face face) async {
     try {
       final box = face.boundingBox;
@@ -519,193 +519,227 @@ class _CameraMeasuringScreenState extends State<CameraMeasuringScreen> {
   });
 }
   Widget build(BuildContext context) {
-  return PopScope(
-    canPop: false,
-    child: Scaffold(
-      backgroundColor: Colors.white,
-      appBar: 
-         AppBar(
-          title: 
-                  Text(
-                  widget.t(
-                    "Repetition ${widget.currentRepetition} / ${widget.repetitions}",
-                    "Wiederholung ${widget.currentRepetition} / ${widget.repetitions}",
-                  ),),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _onLeavePressed,
-          ),
-
-        ],
-      ),
-      body: Stack(
-        children: [
-
-
-          Padding(
-            padding: const EdgeInsets.only(top: 250, bottom: 30),
-            child: Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  
-                  FutureBuilder<void>(
-                    future: _initializeControllerFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done &&
-                          _cameraController != null &&
-                          _cameraController!.value.isInitialized) {
-
-                        return AspectRatio(
-                          aspectRatio: _cameraController!.value.aspectRatio,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(30),
-                            child: CameraPreview(_cameraController!),
-                          ),
-                        );
-                      }
-
-                      return const CircularProgressIndicator();
-                    },
-                  ),
-                   Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          recording ? "$countdown" : "",
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Green frame overlay
-                  Container(
-                    width: 300,
-                    height: 350,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.greenAccent,
-                        width: 3,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Card(
-                  elevation: 3,
-                  color: Colors.grey.shade50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          t("Examiner Instruction", "Anweisung für Untersucher"),
-                          style: TextStyle(
-                            color: Colors.deepOrange,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        Text(
-                          widget.t(
-                            "Align the face inside the Camera",
-                            "1. Positionieren Sie die Kamera so, dass das Gesicht des Probanden knapp im grünen Rahmen liegt.\n"
-                            "2. Starten Sie die Aufnahme\n"
-                            "3. Lesen Sie vor: \"Schauen Sie in die Kamera und lächeln Sie mit sichtbaren Zähnen\"\n"
-                            "4. Nachdem der Proband mindestens 3 Sekunden gelächelt hat. Lesen Sie vor: \"Hören Sie bitte auf zu lächeln\"\n"
-                            "5. Stoppen Sie die Aufnahme."
-                          ),
-                          textAlign: TextAlign.left,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-         
-
-          Positioned(
-            right: 16,
-            top: 0,
-            bottom: 0,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: isStarting
-                    ? null
-                    : (recording ? _stopVideoRecording : _startVideoRecording),
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: recording ? Colors.red : Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    recording ? Icons.stop : Icons.play_arrow,
-                    size: 40,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          
-
-
-          if (isStarting)
-            Container(
-              color: Colors.black.withOpacity(0.4),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 20),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: 
+          AppBar(
+            title: 
                     Text(
-                      "Sensoren werden gestartet...",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                    widget.t(
+                      "Repetition ${widget.currentRepetition} / ${widget.repetitions}",
+                      "Wiederholung ${widget.currentRepetition} / ${widget.repetitions}",
+                    ),),
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: _onLeavePressed,
+            ),
+
+          ],
+        ),
+        body: Stack(
+          children: [
+
+
+            Padding(
+              padding: const EdgeInsets.only(top: 250, bottom: 30),
+              child: Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    
+                    FutureBuilder<void>(
+                      future: _initializeControllerFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            _cameraController != null &&
+                            _cameraController!.value.isInitialized) {
+
+                          return AspectRatio(
+                            aspectRatio: _cameraController!.value.aspectRatio,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(30),
+                              child: CameraPreview(_cameraController!),
+                            ),
+                          );
+                        }
+
+                        return const CircularProgressIndicator();
+                      },
+                    ),
+                    Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Text(
+                            recording ? "$countdown" : "",
+                            style: const TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Green frame overlay
+                    Container(
+                      width: 200,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.greenAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-        ],
+
+
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Card(
+                    elevation: 3,
+                    color: Colors.grey.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            t("Examiner Instruction", "Anweisung für Untersucher"),
+                            style: TextStyle(
+                              color: Colors.deepOrange,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          buildInstructionText(widget.instruction)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          
+
+            Positioned(
+              right: 16,
+              top: 0,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: isStarting
+                      ? null
+                      : (recording ? _stopVideoRecording : _startVideoRecording),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: recording ? Colors.red : Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      recording ? Icons.stop : Icons.play_arrow,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            
+
+
+            if (isStarting)
+              Container(
+                color: Colors.black.withOpacity(0.4),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 20),
+                      Text(
+                        "Sensoren werden gestartet...",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget buildInstructionText(String text) {
+    final regex = RegExp(r'"([^"]*)"');
+    final spans = <TextSpan>[];
+
+    int lastMatchEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      
+      // Text vor den Anführungszeichen
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+          ),
+        );
+      }
+
+      spans.add(
+        TextSpan(
+          text: match.group(0), // inklusive "
+          style: const TextStyle(
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+        ),
+      );
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        children: spans,
+      ),
+    );
+  }
 }

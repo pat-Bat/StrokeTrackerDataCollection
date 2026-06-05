@@ -211,7 +211,7 @@ Widget _buildStepCard() {
         title: widget.t("Left Ear","Linkes Ohr"),
         subtitle: widget.t(
           "Place left earbud and start test",
-          "Linken Ohrhörer einsetzen und testen. Falls die Qualität unter 70 ist versuchen Sie den Hörer besser einzusetzen. Verbessert sich dieser Wert mehrfach nicht können sie fortfahren.",
+          "Linken Ohrhörer einsetzen und testen. Falls die Qualität unter 100 ist versuchen Sie den Hörer besser einzusetzen. Ansonsten fahren Sie fort.",
         ),
         isLoading: isMeasuring,
         onTap: () => checkSeal(true),
@@ -222,7 +222,7 @@ Widget _buildStepCard() {
         title: widget.t("Right Ear","Rechtes Ohr"),
         subtitle: widget.t(
           "Now test the right earbud",
-          "Rechten Ohrhörer einsetzen und testen. Falls die Qualität unter 70 ist versuchen Sie den Hörer besser einzusetzen. Verbessert sich dieser Wert mehrfach nicht können sie fortfahren.",
+          "Rechten Ohrhörer einsetzen und testen. Falls die Qualität unter 100 ist versuchen Sie den Hörer besser einzusetzen. Ansonsten fahren Sie fort.",
         ),
         isLoading: isMeasuring,
         onTap: () => checkSeal(false),
@@ -312,8 +312,31 @@ Widget _buildActionCard({
   );
 }
 Widget _buildResultCard(String label, Map<String, dynamic> result) {
-  final quality = (result['quality'] ?? 0).toString();
+  int quality = 0;
 
+
+
+
+  Map<String, dynamic>? firstPeak;
+
+
+  if (result['points'].isNotEmpty) {
+
+
+    firstPeak = result['points'].first.cast<String, dynamic>();
+
+
+  
+
+
+    (firstPeak!['magnitude'] as num?)?.toDouble() == null ? null :  quality = (firstPeak!['magnitude'] as num?)!.toInt();
+
+
+  } else {
+
+
+    firstPeak = null;
+  }
   return Card(
     color: Colors.green.shade50,
     child: ListTile(

@@ -28,29 +28,30 @@ class StudyProtocol {
   StudyStep(
     type: StudyStepType.instruction,
     heading: t("Smiling", "Lächeln"),
-    description: t(
-      "After pressing the start-button, wait until the countdown starts, after the countdown starts instruct the patient to smile",
-      "„Drücken Sie den Start-Knopf, warten Sie, bis der Countdown beginnt, und sobald der Countdown startet, weisen Sie den Patienten an, zu lächeln.“"
-    ),
   ),
   StudyStep(
     type: StudyStepType.cameraMeasurement,
     repetitions: 15,
+    description:  t(
+   "Align the face inside the Camera",
+   "1. Positionieren Sie die Kamera so, dass das Gesicht des Probanden im grünen Rahmen liegt.\n"
+   "2. Starten Sie die Aufnahme\n"
+   "3. Lesen Sie vor: \"Schauen Sie in die Kamera und lächeln Sie mit sichtbaren Zähnen\"\n"
+   "4. Nachdem der Proband mindestens 3 Sekunden gelächelt hat. Lesen Sie vor: \"Hören Sie bitte auf zu lächeln\"\n"
+   "5. Stoppen Sie die Aufnahme."
+),
   ),
   StudyStep(
     type: StudyStepType.instruction,
     heading: t("Turn Head", "Kopf drehen"),
-    description: t(
-      "During the recording the patient needs to turn the head",
-      "Während der Aufnahme soll der patient den Kopf drehen"
-    ),
+    
   ),
   StudyStep(
     type: StudyStepType.measuringHead,
     measuringInstructions: [
       t(
         "Instruct the patient to start with the head in a neutral position, then turn it to the right, back to neutral, and then to the left, and back to neutral.",
-        "Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf in eine für Sie gerade Position.\"\n"
+        "Lesen Sie vor: \"Bringen Sie Ihren Kopf in eine aufrechte Position und schauen Sie nach vorne.\"\n"
         "1. Starten Sie die Aufnahme.\n"
         "2. Lesen Sie vor: \"Drehen Sie Ihren Kopf nach rechts und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach links und zurück zur Mitte.\"\n"
         "3. Vergewissern Sie sich, dass der Proband die Bewegung vollständig ausgeführt hat.\n"
@@ -58,7 +59,7 @@ class StudyProtocol {
       ),
       t(
         "Instruct the patient to start with the head in a neutral position, then turn it to the left, back to neutral, and then to the right, and back to neutral.",
-        "Lesen Sie vor: \"Bitte bringen Sie Ihren Kopf in eine für Sie gerade Position.\"\n"
+        "Lesen Sie vor: \"Bringen Sie Ihren Kopf in eine aufrechte Position und schauen Sie nach vorne.\"\n"
         "1. Starten Sie die Aufnahme.\n"
         "2. Lesen Sie vor: \"Drehen Sie Ihren Kopf nach links und zurück zur Mitte. Drehen Sie danach Ihren Kopf nach rechts und zurück zur Mitte.\"\n"
         "3. Vergewissern Sie sich, dass der Proband die Bewegung vollständig ausgeführt hat.\n"
@@ -70,24 +71,20 @@ class StudyProtocol {
   StudyStep(
     type: StudyStepType.instruction,
     heading: t("Tap Earables", "Earables antippen"),
-    description: t(
-      "During the recording double-tap one earable with the opposing arm twice",
-      "Während der Aufnahme ein Earable mit dem gegenüberliegenden Arm zweimal schnell hintereinander antippen"
-    ),
   ),
   StudyStep(
     type: StudyStepType.measuringTap,
     measuringInstructions: [
       t(
         "Instruct the patient double-tap the right Earable with the left Hand twice",
-        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihnren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\""
+        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\"\n"
         "1. Starten Sie die Aufnahme.\n"
         "2. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
         "3. Stoppen Sie die Aufnahme."
       ),
       t(
         "Instruct the patient double-tap the right Earable with the left Hand twice",
-        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihnren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\""
+        "Lesen Sie vor:\"Legen Sie ihre Hände vor Ihnen hin und bewegen Sie ihren Kopf in der folgenden Aufgabe nicht. Sie werden einen Ton auf einer Seite der Hörer hören, bitte tippen Sie mit Ihrer gegnüberliegendenden Hand zweimal kurz hintereinander auf diesen Hörer.\"\n"
         "1. Starten Sie die Aufnahme.\n"
         "2. Warten Sie, bis der Proband die Bewegung ausgeführt hat.\n"
         "3. Stoppen Sie die Aufnahme."

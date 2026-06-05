@@ -38,7 +38,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             const SizedBox(height: 20),
 
             Text(
-              widget.t("Your recordings and logs are ready. Export them below.", "Ihr Aufnahmen sind bereit. Sie können diese nun Exportieren."),
+              widget.t("Your recordings and logs are ready. Export them below.", "Ihr Aufnahmen sind bereit. Sie können diese nun exportieren."),
               style: TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),

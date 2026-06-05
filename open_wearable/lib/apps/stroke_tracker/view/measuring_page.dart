@@ -172,7 +172,7 @@ Future<void> playRight() async {
           content: Text(
               t(
               "Do you want to save this measurement or repeat it?",
-              "Möchten Sie diese Messung speichern oder wiederholen?"
+              "Möchten Sie diese Messung speichern oder verwerfen und wiederholen?"
             ),
           ),
           actions: [
@@ -261,27 +261,22 @@ Future<void> playRight() async {
       canPop: false,
       child: Scaffold(
         appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${widget.t("Step", "Schritt")} ${widget.stepsDone} / ${widget.stepsTotal}'),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: widget.stepsDone/widget.stepsTotal,
-              backgroundColor: Colors.grey[300],
-              color: Colors.blue,
+          automaticallyImplyLeading: false,
+          title: 
+            Text(
+              widget.t(
+                "Repetition ${widget.currentRepetition} / ${widget.repetitions}",
+                "Wiederholung ${widget.currentRepetition} / ${widget.repetitions}",
+              ),),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: _onLeavePressed,
             ),
+
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _onLeavePressed,
-          ),
-
-        ],
-      ),
+        
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
@@ -307,15 +302,7 @@ Future<void> playRight() async {
                             ),
                           ),
                           SizedBox(height: 8),
-                          Text(
-                            widget.instruction,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          buildInstructionText(widget.instruction)
                         ],
                       ),
                     ),
@@ -430,5 +417,55 @@ Future<void> playRight() async {
           ),
         ),
       ));
+  }
+
+  Widget buildInstructionText(String text) {
+    final regex = RegExp(r'"([^"]*)"');
+    final spans = <TextSpan>[];
+
+    int lastMatchEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      // Text vor den Anführungszeichen
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+          ),
+        );
+      }
+
+      // Text innerhalb der Anführungszeichen (kursiv)
+      spans.add(
+        TextSpan(
+          text: match.group(0), // inklusive "
+          style: const TextStyle(
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    // Restlicher Text
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+        ),
+      );
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        children: spans,
+      ),
+    );
   }
 }

@@ -141,7 +141,7 @@ class _StudySelectionState extends State<StudySelection> {
 
               // PARTICIPANT ID INPUT
               Text(
-                isEnglish ? 'Enter your Participant ID' : 'Teilnehmer-ID eingeben',
+                isEnglish ? 'Enter your Participant ID' : 'Probanden-ID eingeben',
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
@@ -149,7 +149,7 @@ class _StudySelectionState extends State<StudySelection> {
                 controller: _controller,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: isEnglish ? 'Participant ID' : 'Teilnehmer-ID',
+                  labelText: isEnglish ? 'Participant ID' : 'Probanden-ID',
                   hintText: isEnglish ? 'Letters and numbers only' : 'Nur Buchstaben und Zahlen',
                 ),
               ),

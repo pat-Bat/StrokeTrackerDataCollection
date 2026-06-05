@@ -73,11 +73,12 @@ class TaskScreen extends StatefulWidget{
   final String instruction;
   final ExperimentLogger logger;
   final ExperimentManager manager;
-  final VoidCallback addRepetition;
   final int stepsDone;
   final int stepsTotal;
   final Future<void> Function() onLeaveStudy;
+  final void Function() onNextTest;
   final String Function(String en,String de) translate;
+
 
   const TaskScreen({
     super.key,
@@ -91,8 +92,8 @@ class TaskScreen extends StatefulWidget{
     required this.manager,
     required this.stepsDone,
     required this.stepsTotal,
-    required this.addRepetition,
-    required this.instruction
+    required this.instruction,
+    required this.onNextTest,
   });
 
   @override
@@ -151,18 +152,7 @@ class _TaskScreenState extends State<TaskScreen> {
       canPop: false,
     child: Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${t("Step", "Schritt")} ${widget.stepsDone} / ${widget.stepsTotal}'),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: widget.stepsDone/widget.stepsTotal,
-              backgroundColor: Colors.grey[300],
-              color: Colors.blue,
-            ),
-          ],
-        ),
+        title: Text(t("Abnormality assessment","Bewertung der Auffälligkeiten")),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -240,7 +230,6 @@ class _TaskScreenState extends State<TaskScreen> {
               children: [
                 ElevatedButton(
                 onPressed: canGoNext() ? () {
-                    widget.addRepetition();
                     pressExitButton();
                    }  : null,
                 child: Text(
@@ -248,7 +237,7 @@ class _TaskScreenState extends State<TaskScreen> {
                 ),),
                 SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: canGoNext() ? pressExitButton : null,
+                  onPressed: canGoNext() ? () {widget.onNextTest();pressExitButton();} : null,
                   child: Text(
                     t("Start/Repeat Task", "Zur Nächsten Aufgabe")
                   ),)
@@ -292,18 +281,25 @@ class _TaskScreenState extends State<TaskScreen> {
         Text(
                 t(
           "Which side is the impairment (From perspective of the Proband)?",
-          "Welche Gesichtshälfte ist betroffen (Sicht des Probanden)?"
+          "Welche Körperhälfte ist betroffen (Sicht des Probanden)?"
         ),
           style: TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 10),
 
         SegmentedButton<Side>(
+          showSelectedIcon: false,
           segments: <ButtonSegment<Side>>[
             ButtonSegment(
               value: Side.left,
-              label: Text(t("Left", "Links")),
-              icon: Icon(Icons.arrow_left),
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.arrow_left),
+                  SizedBox(width: 4),
+                  Text(t("Left", "Links")),
+                ],
+              ),
             ),
             ButtonSegment(
               value: Side.right,

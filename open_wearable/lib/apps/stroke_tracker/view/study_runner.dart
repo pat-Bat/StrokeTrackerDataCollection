@@ -57,7 +57,6 @@ class _StudyRunnerState extends State<StudyRunner> {
   String currentInstruction = "";
   int _stepsDone = 0;
   int _stepsTotal = 0;
-  int _repetitionCounter = 1;
   late final FaceDetectorIsolate _faceDetectorIsolate;
   /// Zählt echte Mess-Schritte (1,2,3...)
 
@@ -119,14 +118,12 @@ class _StudyRunnerState extends State<StudyRunner> {
     );
   }
 
-
-
   Future<void> _startMeasuring(bool useRing) async {
     //await _manager.deactivateSensors(); // <-- wichtig
     final step = _steps[_currentIndex];
     // final date = DateTime.now().toIso8601String().replaceAll(':', '-');
     final recordingId = 
-        "${widget.protocol.sessionId.replaceAll(':', '-')}_Step_${_currentIndex}_rep_${_repetitionCounter}_";
+        "${widget.protocol.sessionId.replaceAll(':', '-')}_Step_${_currentIndex}_rep_${step.repetitionsDone}_";
 
     await _logger.startLogging(false, widget.protocol.sessionId);
     _logger.logTaskStart(_currentIndex, step.heading);
@@ -134,7 +131,7 @@ class _StudyRunnerState extends State<StudyRunner> {
     print("startSensorLogFilePrefix");
     await _manager.setSensorLogFilePrefix(recordingId);
     print("startConfigureSensors");
-    await _manager.configureSensors(widget.protocol.sessionId,_currentIndex,_repetitionCounter, useRing);
+    await _manager.configureSensors(widget.protocol.sessionId,_currentIndex,step.repetitionsDone, useRing);
     print("Sensoren gestartet");
   }
 
@@ -157,14 +154,12 @@ class _StudyRunnerState extends State<StudyRunner> {
   void _jumpToTest(int index) {
     setState(() {
       _currentIndex = index;
-      _repetitionCounter = 1;
     });
   }
 
-  Future<void> _testSelection() async{
+  void _testSelection() async{
     setState(() {
       _currentIndex = -1;
-      _repetitionCounter = 1;
     });
   }
 
@@ -189,58 +184,58 @@ class _StudyRunnerState extends State<StudyRunner> {
     },
   );
 }
-  void addRepetition() {
-    setState(() {
-      _steps[_currentIndex].repetitions++;
-      _stepsTotal++;
-    });
-    print("Repcounter:$_repetitionCounter");
-    print("steps_reps:${_steps[_currentIndex].repetitions}");
-  }
 
   Future<void> _saveAndAdvance() async {
+
     _logger.logTaskEnd();
     await _logger.stopAndWriteLogging(false);
     final currentStep = _steps[_currentIndex];
+    
     int maxRepetitions = currentStep.repetitions;
-    setState(() {
-      if (_steps[_currentIndex].type != StudyStepType.instruction) {
-        _stepsDone = _stepsDone + 1;
-      }
-    });
     await Navigator.push(context, 
     MaterialPageRoute(
     builder: (context) => TaskScreen(
+      onNextTest: _testSelection,
       stepsDone: _stepsDone,
       stepsTotal: _stepsTotal,
       manager: _manager,
       maxRepetition: maxRepetitions, 
-      currentRepetition: _repetitionCounter, 
+      currentRepetition: currentStep.repetitionsDone, 
       logger: _logger,
       onLeaveStudy: _leaveStudy,
       currentStepNumber: _currentIndex,
       currentStepTask: _steps[_currentIndex].heading,
       translate: widget.protocol.t,
-      addRepetition: addRepetition,
       instruction: currentInstruction,
       ),
       
     ),
     );
-    maxRepetitions = currentStep.repetitions;
+    
     setState(() {
-      
-      
-      if (_repetitionCounter < maxRepetitions) {
+      currentStep.repetitionsDone +=1;
+      if (_currentIndex == -1) {
+          
+          return;
+        }
+      if (currentStep.repetitionsDone < maxRepetitions) {
         // weitere Wiederholung des gleichen Schritts
-        print("repeat step");
-        _repetitionCounter++;
       } else {
-        _repetitionCounter = 1;
-        _nextStep();
-  
+        _testSelection();
 
       }
+    });
+  }
+
+  void _onNext() {
+    setState(() {
+      _currentIndex +=1;
+    });
+  }
+
+  Future<void> _endPage() async {
+    setState(() {
+      _currentIndex = _steps.length -1;
     });
   }
 
@@ -272,18 +267,6 @@ class _StudyRunnerState extends State<StudyRunner> {
     }
   }
 
-  Future<void> _nextStep() async {
-    print("go to next Step");
-    _manager.synchronizeTime();
-    if (_currentIndex < _steps.length - 1) {
-      setState(() => _currentIndex++);
-    } else {
-      _leaveStudy();
-    }
-  }
-
-
-  
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<void>(
@@ -308,7 +291,14 @@ class _StudyRunnerState extends State<StudyRunner> {
         }
 
         if(_currentIndex <0) {
-          return TestSelectionScreen(onSmileTest: onSmileTest, onHeadTurnTest: onHeadTurnTest, onArmMovementTest: onTapTest,t: widget.protocol.t, onLeaveStudy: _leaveStudy,);
+          return TestSelectionScreen(
+            onSmileTest: onSmileTest, 
+            onHeadTurnTest: onHeadTurnTest, 
+            onArmMovementTest: onTapTest,
+            t: widget.protocol.t, 
+            onLeaveStudy: _endPage,
+            steps: [_steps[1],_steps[3],_steps[5]],
+            );
         } else {
 
         final step = _steps[_currentIndex];
@@ -319,11 +309,11 @@ class _StudyRunnerState extends State<StudyRunner> {
             sessionId: widget.protocol.sessionId,
             logger: _logger,
             heading: step.heading,
-            currentRepetitionNumber: _repetitionCounter,
+            currentRepetitionNumber: step.repetitionsDone,
             currentStepNumber: _currentIndex,
             description: step.description,
             sealCheck: _manager.runSealCheck,
-            onNext: _nextStep,
+            onNext: _onNext,
             onLeaveStudy: _leaveStudy,
             t: widget.protocol.t,
           );
@@ -332,7 +322,7 @@ class _StudyRunnerState extends State<StudyRunner> {
         if (step.type == StudyStepType.cameraMeasurement) {
           currentInstruction = "SmileTask";
           return CameraMeasuringScreen(
-            currentRepetition: _repetitionCounter,
+            currentRepetition: step.repetitionsDone,
             onLeaveStudy: _leaveStudy,
             repetitions: step.repetitions, 
             onNext: _saveAndAdvance, 
@@ -345,6 +335,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             dispose: _manager.deactivateSensors,
             useRing: false,
             manager: _manager,
+            instruction:step.description,
             );
         }
 
@@ -372,7 +363,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             onNext: _saveAndAdvance, 
             startMeasuring: _startMeasuring, 
             stopMeasuring: _stopAndConfirm, 
-            currentRepetition: _repetitionCounter, 
+            currentRepetition: step.repetitionsDone, 
             logger: _logger, 
             recordingId: widget.protocol.sessionId, 
             taskName: step.heading, 
@@ -408,7 +399,7 @@ class _StudyRunnerState extends State<StudyRunner> {
             onNext: _saveAndAdvance, 
             startMeasuring: _startMeasuring, 
             stopMeasuring: _stopAndConfirm, 
-            currentRepetition: _repetitionCounter, 
+            currentRepetition: step.repetitionsDone, 
             logger: _logger, 
             recordingId: widget.protocol.sessionId, 
             taskName: step.heading, 
