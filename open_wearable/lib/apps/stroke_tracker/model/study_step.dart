@@ -2,8 +2,15 @@
 
 import 'dart:math';
 
-enum StudyStepType { instruction, measuringHead, measuringTap, cameraMeasurement, ending}
-enum Side {left,right}
+enum StudyStepType {
+  instruction,
+  measuringHead,
+  measuringTap,
+  cameraMeasurement,
+  ending
+}
+
+enum Side { left, right }
 
 class StudyStep {
   final StudyStepType type;
@@ -32,15 +39,11 @@ class StudyStep {
     this.debugMode = false,
     this.secondaryDescription = false,
     this.secondaryDescriptionString = "",
-    
-  }){
+  }) {
     final random = Random(DateTime.now().second); // seed = timestamp
 
-  instructionOrder = List.generate(repetitions, (_) {
-    return 0 + random.nextInt(measuringInstructions.length);
-  });
+    instructionOrder = List.generate(repetitions, (_) {
+      return 0 + random.nextInt(measuringInstructions.length);
+    });
   }
-
-
-
 }
