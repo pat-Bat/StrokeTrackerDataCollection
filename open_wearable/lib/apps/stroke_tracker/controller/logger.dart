@@ -95,17 +95,16 @@ class LabelEvent {
   final int repetition;
   final Side? symptomSide;
   final String instruction;
-  LabelEvent({
-    required this.labelValue,
-    required this.taskID,
-    required this.repetition,
-    required this.instruction,
-    required this.symptomSide
-  });
+  LabelEvent(
+      {required this.labelValue,
+      required this.taskID,
+      required this.repetition,
+      required this.instruction,
+      required this.symptomSide});
 
   List<String> toCsvRow(String sessionID) {
     return [
-      sessionID, 
+      sessionID,
       taskID.toString(),
       repetition.toString(),
       instruction,
@@ -116,16 +115,16 @@ class LabelEvent {
 }
 
 /// Logger for ExperimentManager
-class ExperimentLogger extends ChangeNotifier{
+class ExperimentLogger extends ChangeNotifier {
   static const String _stepsCsvHeader =
       'SessionID,Block,Task,DurationS,StartTime,EndTime,RelativeStartMS,RelativeEndMS';
   static const String _otherCsvHeader =
       'SessionID,Block,Task,Time,RelativeTimeMS,EventType,Value';
 
   static const String _labelCsvHeader =
-    'SessionID,TaskID,Repetition,instruction,Value,Impairmentside';
+      'SessionID,TaskID,Repetition,instruction,Value,Impairmentside';
   static const String _syncCsvHeader =
-    'SessionID,DeviceTimestamp,PhoneTimestamp,RelativePhoneTimeMS,Side';
+      'SessionID,DeviceTimestamp,PhoneTimestamp,RelativePhoneTimeMS,Side';
 
   late File _syncCsvFile;
   late File _stepsCsvFile;
@@ -145,28 +144,28 @@ class ExperimentLogger extends ChangeNotifier{
     sessionID = newSessionID;
     final dir = await getApplicationDocumentsDirectory();
 
-    
-      _stepsCsvFile = File('${dir.path}/steps_log.csv');
-      _otherCsvFile = File('${dir.path}/other_log.csv');
-      _syncCsvFile = File('${dir.path}/sync_log.csv');
-      _labelCsvFile = File('${dir.path}/label_log.csv');
-    
+    _stepsCsvFile = File('${dir.path}/steps_log.csv');
+    _otherCsvFile = File('${dir.path}/other_log.csv');
+    _syncCsvFile = File('${dir.path}/sync_log.csv');
+    _labelCsvFile = File('${dir.path}/label_log.csv');
+
     if (!await _syncCsvFile.exists()) {
       await _syncCsvFile.writeAsString(_syncCsvHeader);
     }
-    if (!await _stepsCsvFile.exists()){
+    if (!await _stepsCsvFile.exists()) {
       await _stepsCsvFile.writeAsString(_stepsCsvHeader);
     }
 
-    if (!await _otherCsvFile.exists()){
+    if (!await _otherCsvFile.exists()) {
       await _otherCsvFile.writeAsString(_otherCsvHeader);
     }
 
-    if (!await _labelCsvFile.exists()){
+    if (!await _labelCsvFile.exists()) {
       await _labelCsvFile.writeAsString(_labelCsvHeader);
     }
     _sessionStartTime = DateTime.now();
   }
+
   void logSyncLeftEvent(int deviceTimestamp) {
     _logSyncEvent(deviceTimestamp, "L");
   }
@@ -215,13 +214,13 @@ class ExperimentLogger extends ChangeNotifier{
   }
 
   void logLabel(
-    int taskID,
-    int value,
-    Side? side,
-    int repetition,
-    String instruction
-  ) {
-    final event = LabelEvent(labelValue: value, taskID: taskID, repetition: repetition, symptomSide: side, instruction: instruction);
+      int taskID, int value, Side? side, int repetition, String instruction) {
+    final event = LabelEvent(
+        labelValue: value,
+        taskID: taskID,
+        repetition: repetition,
+        symptomSide: side,
+        instruction: instruction);
     _label.add(event);
   }
 
@@ -268,37 +267,34 @@ class ExperimentLogger extends ChangeNotifier{
 
     final syncCsvData = converter.convert(syncRows);
 
-    
-      final stepsRows = <List<String>>[];
-      for (final e in _stepEvents) {
-        stepsRows.add(e.toCsvRow(sessionID));
-      }
-      final otherRows = <List<String>>[];
-      for (final e in _otherEvents) {
-        otherRows.add(e.toCsvRow(sessionID));
-      }
+    final stepsRows = <List<String>>[];
+    for (final e in _stepEvents) {
+      stepsRows.add(e.toCsvRow(sessionID));
+    }
+    final otherRows = <List<String>>[];
+    for (final e in _otherEvents) {
+      otherRows.add(e.toCsvRow(sessionID));
+    }
 
-      final labelRows = <List<String>>[];
-      for (final e in _label) {
-        labelRows.add(e.toCsvRow(sessionID));
-      }
+    final labelRows = <List<String>>[];
+    for (final e in _label) {
+      labelRows.add(e.toCsvRow(sessionID));
+    }
 
+    final stepsCsvData = converter.convert(stepsRows);
+    final otherCsvData = converter.convert(otherRows);
+    final labelCsvData = converter.convert(labelRows);
 
-      final stepsCsvData = converter.convert(stepsRows);
-      final otherCsvData = converter.convert(otherRows);
-      final labelCsvData = converter.convert(labelRows);
-
-      await Future.wait([
-        if(stepsRows.isNotEmpty)
+    await Future.wait([
+      if (stepsRows.isNotEmpty)
         _stepsCsvFile.writeAsString("\n$stepsCsvData", mode: FileMode.append),
-        if(otherRows.isNotEmpty)
+      if (otherRows.isNotEmpty)
         _otherCsvFile.writeAsString("\n$otherCsvData", mode: FileMode.append),
-        if(syncRows.isNotEmpty)
+      if (syncRows.isNotEmpty)
         _syncCsvFile.writeAsString("\n$syncCsvData", mode: FileMode.append),
-        if(labelRows.isNotEmpty)
+      if (labelRows.isNotEmpty)
         _labelCsvFile.writeAsString("\n$labelCsvData", mode: FileMode.append),
-      ]);
-    
+    ]);
 
     _stepEvents.clear();
     _otherEvents.clear();
@@ -331,7 +327,7 @@ class ExperimentLogger extends ChangeNotifier{
     if (await file.exists()) {
       await file.delete();
     }
- }
+  }
 
   Future<void> clearAppDocumentsDirectory() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -354,7 +350,6 @@ class ExperimentLogger extends ChangeNotifier{
     print("ApplicationDocumentsDirectory cleared");
   }
 
-
   static Future<void> deleteAllLogFiles() async {
     final dir = await getApplicationDocumentsDirectory();
 
@@ -369,23 +364,26 @@ class ExperimentLogger extends ChangeNotifier{
     List<File> sourceFiles = await getAllLogFiles();
     for (File file in sourceFiles) {
       String targetPath = "$dirPath/${file.path.split("/").last}";
-    final targetFile = File(targetPath);
+      final targetFile = File(targetPath);
 
-    // Make sure the directory exists
-    await Directory(dirPath).create(recursive: true);
+      // Make sure the directory exists
+      await Directory(dirPath).create(recursive: true);
 
-    // Delete target if it exists (overwrite safely)
-    await targetFile.writeAsString(await file.readAsString());
+      // Delete target if it exists (overwrite safely)
+      await targetFile.writeAsString(await file.readAsString());
     }
   }
 
   static String boundingBoxToString(BoundingBox box) {
     return [
-      box.topLeft.x,box.topLeft.y,
-      box.topRight.x,box.topRight.y,
-      box.bottomLeft.x,box.bottomLeft.y,
-      box.bottomRight.x,box.bottomRight.y
-      
+      box.topLeft.x,
+      box.topLeft.y,
+      box.topRight.x,
+      box.topRight.y,
+      box.bottomLeft.x,
+      box.bottomLeft.y,
+      box.bottomRight.x,
+      box.bottomRight.y
     ].join(',');
   }
 
@@ -403,13 +401,13 @@ class ExperimentLogger extends ChangeNotifier{
       point = [];
     }
 
-  return values.join(',');
+    return values.join(',');
   }
 
   static Future<void> logFaceData(
-  List<(DateTime, Face, int, int)> faces,
-  String sessionId,
-  int repetition,
+    List<(DateTime, Face, int, int)> faces,
+    String sessionId,
+    int repetition,
   ) async {
     await logFaceDataBinary(faces, sessionId, repetition);
     /*
@@ -457,76 +455,91 @@ class ExperimentLogger extends ChangeNotifier{
     await sink.close(); */
   }
 
-   static Future<void> logFaceDataBinary(
-  List<(DateTime, Face, int, int)> faces,
-  String sessionId,
-  int repetition,
-) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/${sessionId}_faces.bin');
+  static Future<void> logFaceDataBinary(
+    List<(DateTime, Face, int, int)> faces,
+    String sessionId,
+    int repetition,
+  ) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/${sessionId}_faces.bin');
 
-  final sink = file.openWrite(mode: FileMode.append);
+    final sink = file.openWrite(mode: FileMode.append);
 
-  for (final (time, face, height, width) in faces) {
-    if (face.mesh == null) continue;
+    for (final (time, face, height, width) in faces) {
+      if (face.mesh == null) continue;
 
-    final builder = BytesBuilder();
+      final builder = BytesBuilder();
 
-    // repetition
-    final repetitionData = ByteData(4)
-      ..setInt32(0, repetition, Endian.little);
-    builder.add(repetitionData.buffer.asUint8List());
+      // repetition
+      final repetitionData = ByteData(4)
+        ..setInt32(0, repetition, Endian.little);
+      builder.add(repetitionData.buffer.asUint8List());
 
-    // timestamp (microseconds since epoch)
-    final timestampData = ByteData(8)
-      ..setInt64(
-        0,
-        time.microsecondsSinceEpoch,
-        Endian.little,
-      );
-    builder.add(timestampData.buffer.asUint8List());
+      // timestamp (microseconds since epoch)
+      final timestampData = ByteData(8)
+        ..setInt64(
+          0,
+          time.microsecondsSinceEpoch,
+          Endian.little,
+        );
+      builder.add(timestampData.buffer.asUint8List());
 
-    // image dimensions
-    final dimData = ByteData(8)
-      ..setInt32(0, width, Endian.little)
-      ..setInt32(4, height, Endian.little);
-    builder.add(dimData.buffer.asUint8List());
+      // image dimensions
+      final dimData = ByteData(8)
+        ..setInt32(0, width, Endian.little)
+        ..setInt32(4, height, Endian.little);
+      builder.add(dimData.buffer.asUint8List());
 
-    // bounding box
-    final box = face.boundingBox;
+      // bounding box
+      final box = face.boundingBox;
 
-    final bboxData = Float32List.fromList([
-      box.topLeft.x,
-      box.topLeft.y,
-      box.topRight.x,
-      box.topRight.y,
-      box.bottomRight.x,
-      box.bottomRight.y,
-      box.bottomLeft.x,
-      box.bottomLeft.y
-    ]);
+      final bboxData = Float32List.fromList([
+        box.topLeft.x,
+        box.topLeft.y,
+        box.topRight.x,
+        box.topRight.y,
+        box.bottomRight.x,
+        box.bottomRight.y,
+        box.bottomLeft.x,
+        box.bottomLeft.y
+      ]);
 
-    builder.add(bboxData.buffer.asUint8List());
+      builder.add(bboxData.buffer.asUint8List());
 
+      // landmarks
+      final points = face.mesh!.points;
 
-    // landmarks
-    final points = face.mesh!.points;
+      final landmarkData = Float32List(points.length * 2);
 
-    final landmarkData = Float32List(points.length * 2);
-
-    for (int i = 0; i < points.length; i++) {
-      landmarkData[i * 2] = points[i].x.toDouble();
-      landmarkData[i * 2 + 1] = points[i].y.toDouble();
-    }
+      for (int i = 0; i < points.length; i++) {
+        landmarkData[i * 2] = points[i].x.toDouble();
+        landmarkData[i * 2 + 1] = points[i].y.toDouble();
+      }
 
       builder.add(landmarkData.buffer.asUint8List());
 
       sink.add(builder.takeBytes());
     }
 
-  await sink.flush();
-  await sink.close();
-}
+    await sink.flush();
+    await sink.close();
+  }
+
+  static Future<List<File>> getAllAudioFiles() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final files = <File>[];
+    try {
+      await for (final entity in directory.list()) {
+        if (entity is File && entity.path.endsWith('.wav')) {
+          files.add(entity);
+        }
+      }
+    } catch (e) {
+      print('Error listing audio files: $e');
+    }
+    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    return files;
+  }
 
   static Future<List<File>> getAllFaceData() async {
     final directory = await getApplicationDocumentsDirectory();
@@ -534,7 +547,9 @@ class ExperimentLogger extends ChangeNotifier{
 
     try {
       await for (final entity in directory.list()) {
-        if (entity is File && (entity.path.endsWith('faces.csv') || entity.path.endsWith('faces.bin')) ) {
+        if (entity is File &&
+            (entity.path.endsWith('faces.csv') ||
+                entity.path.endsWith('faces.bin'))) {
           files.add(entity);
         }
       }

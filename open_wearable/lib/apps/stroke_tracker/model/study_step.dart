@@ -7,6 +7,7 @@ enum StudyStepType {
   measuringHead,
   measuringTap,
   cameraMeasurement,
+  countingMeasurement,
   ending
 }
 

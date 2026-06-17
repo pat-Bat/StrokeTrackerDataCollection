@@ -6,8 +6,9 @@ import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:open_wearable/apps/stroke_tracker/model/config.dart';
 import 'package:open_wearable/view_models/sensor_configuration_provider.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 
-class ExperimentManager extends ChangeNotifier{
+class ExperimentManager extends ChangeNotifier {
   final ExperimentLogger logger;
   final ExperimentConfig expConfig;
   final OpenEarableV2 leftWearable;
@@ -22,7 +23,7 @@ class ExperimentManager extends ChangeNotifier{
 
   late Map<String, SensorConfiguration> _leftSensorIdToCfgMap;
   late Map<String, SensorConfiguration> _rightSensorIdToCfgMap;
-  
+
   late ImuCsvWriter _imuCsvWriter;
 
   Completer<void>? _leftReady;
@@ -34,6 +35,7 @@ class ExperimentManager extends ChangeNotifier{
   StreamSubscription<SensorValue>? _leftSubscription;
   StreamSubscription<SensorValue>? _rightSubscription;
   StreamSubscription<SensorValue>? _ringSubscription;
+  AudioRecorder? _phoneRecorder;
 
   ExperimentManager({
     required this.logger,
@@ -44,7 +46,6 @@ class ExperimentManager extends ChangeNotifier{
     required this.rightSensorCfgProvider,
     required this.ring,
     required this.ringSensorCfgProvider,
-    
   }) {
     if (leftWearable is SensorConfigurationManager) {
       _leftSensorCfgs =
@@ -64,18 +65,15 @@ class ExperimentManager extends ChangeNotifier{
       _rightSensorIdToCfgMap = {};
       for (var configuration in _rightSensorCfgs) {
         _rightSensorIdToCfgMap[configuration.name] = configuration;
-      
       }
     } else {
       throw Exception(
         "The right wearable does not support sensor configuration",
       );
     }
-    
   }
 
   Future<void> setSensorLogFilePrefix(String prefix) async {
-    
     if (leftWearable is! EdgeRecorderManager) {
       throw Exception(
         "The left wearable does not support setting a log file prefix",
@@ -155,30 +153,37 @@ class ExperimentManager extends ChangeNotifier{
             StreamSensorConfigOption(),
           );
         }
-
       }
     }
   }
 
   /// Configure sensors based on global configuration
   Future<
-      (
-        List<
-            (
-              SensorConfiguration<SensorConfigurationValue>,
-              SensorConfigurationValue
-            )>,
-        List<
-            (
-              SensorConfiguration<SensorConfigurationValue>,
-              SensorConfigurationValue
-            )>
-      )> configureSensors(String sessionId, int taskNumber, int repetitionNumber, bool useRing) async {
-    
+          (
+            List<
+                (
+                  SensorConfiguration<SensorConfigurationValue>,
+                  SensorConfigurationValue
+                )>,
+            List<
+                (
+                  SensorConfiguration<SensorConfigurationValue>,
+                  SensorConfigurationValue
+                )>
+          )>
+      configureSensors(
+          String sessionId, int taskNumber, int repetitionNumber, bool useRing,
+          {bool useAudio = false}) async {
     if (startedConfigs) {
       return (
-        <(SensorConfiguration<SensorConfigurationValue>, SensorConfigurationValue)>[],
-        <(SensorConfiguration<SensorConfigurationValue>, SensorConfigurationValue)>[],
+        <(
+          SensorConfiguration<SensorConfigurationValue>,
+          SensorConfigurationValue
+        )>[],
+        <(
+          SensorConfiguration<SensorConfigurationValue>,
+          SensorConfigurationValue
+        )>[],
       );
     }
     if (leftWearable is! SensorConfigurationManager) {
@@ -212,9 +217,10 @@ class ExperimentManager extends ChangeNotifier{
         sensorConfig,
       );
     }
+
     if (useRing) {
-    _imuCsvWriter = ImuCsvWriter();
-    await _imuCsvWriter.init(sessionId, taskNumber, repetitionNumber);
+      _imuCsvWriter = ImuCsvWriter();
+      await _imuCsvWriter.init(sessionId, taskNumber, repetitionNumber);
     }
     _leftReady = Completer<void>();
     _rightReady = Completer<void>();
@@ -234,91 +240,114 @@ class ExperimentManager extends ChangeNotifier{
     }
 
     final sensorManager = ring.requireCapability<SensorManager>();
-    final Sensor accelSensor = sensorManager.sensors.firstWhere((s) => s.sensorName.toLowerCase() == "accelerometer".toLowerCase());
+    final Sensor accelSensor = sensorManager.sensors.firstWhere(
+        (s) => s.sensorName.toLowerCase() == "accelerometer".toLowerCase());
 
     final Set<SensorConfiguration> configurations = {};
     configurations.addAll(accelSensor.relatedConfigurations);
 
     for (final SensorConfiguration configuration in configurations) {
-      if (configuration is ConfigurableSensorConfiguration && configuration.availableOptions.contains(StreamSensorConfigOption())) {
-        ringSensorCfgProvider.addSensorConfigurationOption(configuration, StreamSensorConfigOption());
+      if (configuration is ConfigurableSensorConfiguration &&
+          configuration.availableOptions.contains(StreamSensorConfigOption())) {
+        ringSensorCfgProvider.addSensorConfigurationOption(
+            configuration, StreamSensorConfigOption());
       }
-      List<SensorConfigurationValue> values = ringSensorCfgProvider.getSensorConfigurationValues(configuration, distinct: true);
+      List<SensorConfigurationValue> values = ringSensorCfgProvider
+          .getSensorConfigurationValues(configuration, distinct: true);
       ringSensorCfgProvider.addSensorConfiguration(configuration, values.first);
-      configuration.setConfiguration(ringSensorCfgProvider.getSelectedConfigurationValue(configuration)!);
+      configuration.setConfiguration(
+          ringSensorCfgProvider.getSelectedConfigurationValue(configuration)!);
     }
 
     _ringSubscription = accelSensor.sensorStream.listen((data) {
       if (!(_ringReady!.isCompleted)) {
-            _ringReady!.complete();
-            print("ring sensor started");
-            logger.logSyncRingEvent(data.timestamp);
-          }
+        _ringReady!.complete();
+        print("ring sensor started");
+        logger.logSyncRingEvent(data.timestamp);
+      }
       if (data is SensorDoubleValue) {
         final double ax = data.values[0];
         final double ay = data.values[1];
         final double az = data.values[2];
         if (useRing) {
-        _imuCsvWriter.write(data.timestamp, ax, ay, az);
+          _imuCsvWriter.write(data.timestamp, ax, ay, az);
         }
       }
     });
 
     if (leftWearable is SensorManager) {
-        List<Sensor> sensors = (leftWearable as SensorManager).sensors;
-        for (var sensor in sensors) {
-          if (sensor.sensorName.toLowerCase() == "accelerometer".toLowerCase()) {
-            _leftSubscription = sensor.sensorStream.listen(
-              (SensorValue value) {
-                if (!(_leftReady!.isCompleted)) {
-                  _leftReady!.complete();
-                  print("Left sensor started");
-                  logger.logSyncLeftEvent(value.timestamp);
+      List<Sensor> sensors = (leftWearable as SensorManager).sensors;
+      for (var sensor in sensors) {
+        if (sensor.sensorName.toLowerCase() == "accelerometer".toLowerCase()) {
+          _leftSubscription = sensor.sensorStream.listen(
+            (SensorValue value) {
+              if (!(_leftReady!.isCompleted)) {
+                _leftReady!.complete();
+                print("Left sensor started");
+                logger.logSyncLeftEvent(value.timestamp);
               }
-
-              },
-              onDone: () async => _leftSubscription?.cancel(),
-              onError: (error) async {
-                print('Right streaming error: $error');
-                await _leftSubscription?.cancel();
-              },
-            );
-          }
+            },
+            onDone: () async => _leftSubscription?.cancel(),
+            onError: (error) async {
+              print('Right streaming error: $error');
+              await _leftSubscription?.cancel();
+            },
+          );
         }
       }
+    }
 
-      if (rightWearable is SensorManager) {
-        List<Sensor> sensors = (rightWearable as SensorManager).sensors;
-        for (var sensor in sensors) {
-          if (sensor.sensorName.toLowerCase() == "accelerometer".toLowerCase()) {
-            _rightSubscription = sensor.sensorStream.listen(
-              
-              (SensorValue value) {if (!(_rightReady!.isCompleted)) {
+    if (rightWearable is SensorManager) {
+      List<Sensor> sensors = (rightWearable as SensorManager).sensors;
+      for (var sensor in sensors) {
+        if (sensor.sensorName.toLowerCase() == "accelerometer".toLowerCase()) {
+          _rightSubscription = sensor.sensorStream.listen(
+            (SensorValue value) {
+              if (!(_rightReady!.isCompleted)) {
                 _rightReady!.complete();
                 print("Right sensor started");
                 logger.logSyncRightEvent(value.timestamp);
-              }},
-              onDone: () async => _rightSubscription?.cancel(),
-              onError: (error) async {
-                print('Right streaming error: $error');
-                await _rightSubscription?.cancel();
-              },
-            );
-          }
+              }
+            },
+            onDone: () async => _rightSubscription?.cancel(),
+            onError: (error) async {
+              print('Right streaming error: $error');
+              await _rightSubscription?.cancel();
+            },
+          );
         }
       }
-    
+    }
+
+    if (useAudio) {
+      final dir = await getApplicationDocumentsDirectory();
+      final audioPath =
+          '${dir.path}/${sessionId}_counting_task_rep_${repetitionNumber}_phone_audio.wav';
+      _phoneRecorder = AudioRecorder();
+      if (await _phoneRecorder!.hasPermission()) {
+        await _phoneRecorder!.start(
+          const RecordConfig(
+            encoder: AudioEncoder.wav,
+            sampleRate: 16000,
+            numChannels: 1,
+          ),
+          path: audioPath,
+        );
+      }
+    }
+
     if (useRing) {
       await Future.wait([
-      _leftReady!.future,
-      _rightReady!.future,
-      _ringReady!.future,
-    ]);
+        _leftReady!.future,
+        _rightReady!.future,
+        _ringReady!.future,
+      ]);
     } else {
-    await Future.wait([
-      _leftReady!.future,
-      _rightReady!.future,
-    ]);}
+      await Future.wait([
+        _leftReady!.future,
+        _rightReady!.future,
+      ]);
+    }
 
     String leftSelectedCfgsString = leftSelectedCfgs.map(
       (entry) {
@@ -347,24 +376,22 @@ class ExperimentManager extends ChangeNotifier{
   }
 
   Future<void> playSound({required bool left}) async {
-  OpenEarableV2 wearable = left ? leftWearable : rightWearable;
-  try {
-      
-      final AudioResponseManager? manager = wearable
-        .getCapability<AudioResponseManager>();
+    OpenEarableV2 wearable = left ? leftWearable : rightWearable;
+    try {
+      final AudioResponseManager? manager =
+          wearable.getCapability<AudioResponseManager>();
       if (manager == null) {
         throw StateError(
           'Audio response capability not available on ${wearable.name}.',
         );
       }
       await manager.measureAudioResponse(
-          const <String, dynamic>{},
-        );
-        
+        const <String, dynamic>{},
+      );
     } catch (error) {
       print('Sound check failed: ${error}');
     }
-}
+  }
 
   Future<void> synchronizeTime() async {
     leftWearable.requireCapability<TimeSynchronizable>().synchronizeTime();
@@ -378,6 +405,9 @@ class ExperimentManager extends ChangeNotifier{
     await _leftSubscription?.cancel();
     await _rightSubscription?.cancel();
     await _ringSubscription?.cancel();
+    await _phoneRecorder?.stop();
+    await _phoneRecorder?.dispose();
+    _phoneRecorder = null;
 
     /*
     // Deactivate each configured sensor by removing their options
@@ -429,27 +459,25 @@ class ExperimentManager extends ChangeNotifier{
     } */
     await Future.wait([
       ringSensorCfgProvider.turnOffAllSensors(),
-    rightSensorCfgProvider.turnOffAllSensors(),
-    leftSensorCfgProvider.turnOffAllSensors(),
+      rightSensorCfgProvider.turnOffAllSensors(),
+      leftSensorCfgProvider.turnOffAllSensors(),
     ]);
   }
-  
+
   Future<Map<String, dynamic>?> runSealCheck(bool isLeft) async {
     OpenEarableV2 wearable = isLeft ? leftWearable : rightWearable;
     Map<String, dynamic>? data;
     try {
-      
-      final AudioResponseManager? manager = wearable
-        .getCapability<AudioResponseManager>();
+      final AudioResponseManager? manager =
+          wearable.getCapability<AudioResponseManager>();
       if (manager == null) {
         throw StateError(
           'Audio response capability not available on ${wearable.name}.',
         );
       }
       data = await manager.measureAudioResponse(
-          const <String, dynamic>{},
-        );
-        
+        const <String, dynamic>{},
+      );
     } catch (error) {
       print('Seal check failed: ${error}');
     }
@@ -465,7 +493,8 @@ class ImuCsvWriter {
     var now = DateTime.now();
 
     final dir = await getApplicationDocumentsDirectory();
-    _file = File('${dir.path}/${sessionId}_task_${taskId}_rep_${repetitionNumber}_${now.minute}:${now.second}_imulog.csv');
+    _file = File(
+        '${dir.path}/${sessionId}_task_${taskId}_rep_${repetitionNumber}_${now.minute}:${now.second}_imulog.csv');
 
     // Write header if new
     if (!await _file.exists()) {

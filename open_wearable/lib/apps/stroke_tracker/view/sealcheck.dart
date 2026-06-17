@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:open_wearable/apps/stroke_tracker/model/study_step.dart';
 
-
 class SimpleSealCheckScreen extends StatefulWidget {
   final String Function(String en, String de) t;
   final Future<Map<String, dynamic>?> Function(bool isLeft) sealCheck;
 
   const SimpleSealCheckScreen({
     super.key,
-  
     required this.t,
     required this.sealCheck,
   });
@@ -33,7 +31,7 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
     });
 
     final result = await widget.sealCheck(side == Side.left);
-    
+
     setState(() {
       if (side == Side.left) {
         leftResult = result;
@@ -59,8 +57,10 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
     double quality = 0;
     if (result['points'].isNotEmpty) {
       firstPeak = result['points'].first.cast<String, dynamic>();
-    
-      (firstPeak!['magnitude'] as num?)?.toDouble() == null ? null :  quality = (firstPeak!['magnitude'] as num?)!.toDouble();
+
+      (firstPeak!['magnitude'] as num?)?.toDouble() == null
+          ? null
+          : quality = (firstPeak!['magnitude'] as num?)!.toDouble();
     } else {
       firstPeak = null; // or provide a default
     }
@@ -71,19 +71,25 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
           children: [
             Text(widget.t('Quality', 'Qualität') + ': ',
                 style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text( widget.t('Quality should be above 100. Quality: $quality', 'Qualität sollte über 100 sein. Qualität: $quality'),),
+            Text(
+              widget.t('Quality should be above 100. Quality: $quality',
+                  'Qualität sollte über 100 sein. Qualität: $quality'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEarbudSection(Side side, bool isMeasuring, Map<String, dynamic>? result) {
+  Widget _buildEarbudSection(
+      Side side, bool isMeasuring, Map<String, dynamic>? result) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ElevatedButton(
-          onPressed: (isMeasuringLeft || isMeasuringRight) ? null : () => checkSeal(side),
+          onPressed: (isMeasuringLeft || isMeasuringRight)
+              ? null
+              : () => checkSeal(side),
           child: Text(widget.t(
               side == Side.left ? "Check Left Earbud" : "Check Right Earbud",
               side == Side.left ? "Linkes Ohr prüfen" : "Rechtes Ohr prüfen")),
@@ -108,7 +114,6 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            
             const SizedBox(height: 24),
             _buildEarbudSection(Side.left, isMeasuringLeft, leftResult),
             _buildEarbudSection(Side.right, isMeasuringRight, rightResult),
@@ -118,7 +123,8 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
                   "Please test both earbuds before continuing.",
                   "Bitte teste beide Ohrhörer, bevor du fortfährst.",
                 ),
-                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold),
               ),
             const Spacer(),
             Row(
@@ -126,14 +132,16 @@ class _SimpleSealCheckScreenState extends State<SimpleSealCheckScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: resetResults,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[400]),
-                    child: Text(widget.t("Reset Results", "Ergebnisse zurücksetzen")),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[400]),
+                    child: Text(
+                        widget.t("Reset Results", "Ergebnisse zurücksetzen")),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context) ,
+                    onPressed: () => Navigator.pop(context),
                     child: Text(widget.t("Continue", "Weiter")),
                   ),
                 ),

@@ -62,6 +62,7 @@ dependencies:
   face_detection_tflite: ^5.0.9
   opencv_dart: ^2.2.1+4
   audioplayers: ^5.2.1
+  record: ^6.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
