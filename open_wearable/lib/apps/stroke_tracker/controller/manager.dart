@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
+import 'package:open_wearable/apps/stroke_tracker/controller/audio_controller.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 import 'package:open_wearable/apps/stroke_tracker/model/config.dart';
 import 'package:open_wearable/view_models/sensor_configuration_provider.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 
 class ExperimentManager extends ChangeNotifier {
   final ExperimentLogger logger;
@@ -24,6 +24,8 @@ class ExperimentManager extends ChangeNotifier {
   late Map<String, SensorConfiguration> _leftSensorIdToCfgMap;
   late Map<String, SensorConfiguration> _rightSensorIdToCfgMap;
 
+  final AudioController _audioController = AudioController();
+
   late ImuCsvWriter _imuCsvWriter;
 
   Completer<void>? _leftReady;
@@ -35,7 +37,6 @@ class ExperimentManager extends ChangeNotifier {
   StreamSubscription<SensorValue>? _leftSubscription;
   StreamSubscription<SensorValue>? _rightSubscription;
   StreamSubscription<SensorValue>? _ringSubscription;
-  AudioRecorder? _phoneRecorder;
 
   ExperimentManager({
     required this.logger,
@@ -85,8 +86,8 @@ class ExperimentManager extends ChangeNotifier {
       );
     }
     await Future.wait([
-      (leftWearable as EdgeRecorderManager).setFilePrefix("L$prefix"),
-      (rightWearable as EdgeRecorderManager).setFilePrefix("R$prefix"),
+      (leftWearable as EdgeRecorderManager).setFilePrefix(_audioController.buildFilePrefix(prefix, isLeft: true)),
+      (rightWearable as EdgeRecorderManager).setFilePrefix(_audioController.buildFilePrefix(prefix, isLeft: false)),
     ]);
   }
 
@@ -218,6 +219,11 @@ class ExperimentManager extends ChangeNotifier {
       );
     }
 
+    if (useAudio) {
+      _audioController.enableMicrophoneRecording(leftSensorCfgProvider, _leftSensorIdToCfgMap);
+      _audioController.enableMicrophoneRecording(rightSensorCfgProvider, _rightSensorIdToCfgMap);
+    }
+
     if (useRing) {
       _imuCsvWriter = ImuCsvWriter();
       await _imuCsvWriter.init(sessionId, taskNumber, repetitionNumber);
@@ -319,23 +325,6 @@ class ExperimentManager extends ChangeNotifier {
       }
     }
 
-    if (useAudio) {
-      final dir = await getApplicationDocumentsDirectory();
-      final audioPath =
-          '${dir.path}/${sessionId}_counting_task_rep_${repetitionNumber}_phone_audio.wav';
-      _phoneRecorder = AudioRecorder();
-      if (await _phoneRecorder!.hasPermission()) {
-        await _phoneRecorder!.start(
-          const RecordConfig(
-            encoder: AudioEncoder.wav,
-            sampleRate: 16000,
-            numChannels: 1,
-          ),
-          path: audioPath,
-        );
-      }
-    }
-
     if (useRing) {
       await Future.wait([
         _leftReady!.future,
@@ -405,9 +394,6 @@ class ExperimentManager extends ChangeNotifier {
     await _leftSubscription?.cancel();
     await _rightSubscription?.cancel();
     await _ringSubscription?.cancel();
-    await _phoneRecorder?.stop();
-    await _phoneRecorder?.dispose();
-    _phoneRecorder = null;
 
     /*
     // Deactivate each configured sensor by removing their options

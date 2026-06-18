@@ -58,7 +58,7 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
           content: Text(
             t(
               "Are you sure you want to leave? Your progress may be lost.",
-              "Sind Sie sicher, dass Sie die Studie verlassen moechten? Ihr Fortschritt koennte verloren gehen.",
+              "Sind Sie sicher, dass Sie die Studie verlassen möchten? Ihr Fortschritt könnte verloren gehen.",
             ),
           ),
           actions: [
@@ -127,7 +127,7 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
           content: Text(
             t(
               "Do you want to save this measurement or repeat it?",
-              "Moechten Sie diese Messung speichern oder verwerfen und wiederholen?",
+              "Möchten Sie diese Messung speichern oder verwerfen und wiederholen?",
             ),
           ),
           actions: [
@@ -214,7 +214,7 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
                             Text(
                               t(
                                 "Examiner Instruction",
-                                "Anweisung fuer Untersucher",
+                                "Anweisung für Untersucher",
                               ),
                               style: const TextStyle(
                                 color: Colors.deepOrange,
@@ -243,7 +243,7 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "10  9  8  7  6  5  4  3  2  1  0",
+                              "10 9 8 7 6 5 4 3 2 1 0",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey.shade900,
@@ -256,7 +256,7 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
                               _recording
                                   ? t(
                                       "Recording...",
-                                      "Aufnahme laeuft...",
+                                      "Aufnahme läuft...",
                                     )
                                   : t("Ready", "Bereit"),
                               style: TextStyle(

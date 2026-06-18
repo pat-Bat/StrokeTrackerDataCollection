@@ -53,15 +53,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 label: const Text("Export FaceMesh Data"),
               ),
 
-              const SizedBox(height: 20),
-
-              // ================= AUDIO =================
-              ElevatedButton.icon(
-                onPressed: () => _exportAll("audio"),
-                icon: const Icon(Icons.mic),
-                label: const Text("Export Audio (WAV)"),
-              ),
-
               const Spacer(),
 
               ElevatedButton(
@@ -83,8 +74,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
     if (type == "logs") {
       files = await ExperimentLogger.getAllLogFiles();
-    } else if (type == "audio") {
-      files = await ExperimentLogger.getAllAudioFiles();
     } else {
       files = await ExperimentLogger.getAllFaceData();
     }

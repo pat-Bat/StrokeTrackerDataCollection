@@ -525,22 +525,6 @@ class ExperimentLogger extends ChangeNotifier {
     await sink.close();
   }
 
-  static Future<List<File>> getAllAudioFiles() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final files = <File>[];
-    try {
-      await for (final entity in directory.list()) {
-        if (entity is File && entity.path.endsWith('.wav')) {
-          files.add(entity);
-        }
-      }
-    } catch (e) {
-      print('Error listing audio files: $e');
-    }
-    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-    return files;
-  }
-
   static Future<List<File>> getAllFaceData() async {
     final directory = await getApplicationDocumentsDirectory();
     final files = <File>[];

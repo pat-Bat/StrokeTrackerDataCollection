@@ -92,7 +92,6 @@ class _StudyRunnerState extends State<StudyRunner> {
     final sensorConfigs = [
       SensorConfig(sensor: "imu", sampleRate: 50),
       SensorConfig(sensor: "pressure", sampleRate: 50),
-      SensorConfig(sensor: "microphone", sampleRate: 48000),
       SensorConfig(sensor: "ppg", sampleRate: 50),
       SensorConfig(sensor: "bone_conduction", sampleRate: 1600),
       //SensorConfig(sensor: "temperature", sampleRate: 8),
@@ -116,9 +115,10 @@ class _StudyRunnerState extends State<StudyRunner> {
     //await _manager.deactivateSensors(); // <-- wichtig
     final step = _steps[_currentIndex];
     final bool useAudio = step.type == StudyStepType.countingMeasurement;
-    // final date = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final recordingId =
-        "${widget.protocol.sessionId.replaceAll(':', '-')}_Step_${_currentIndex}_rep_${step.repetitionsDone}_";
+    final now = DateTime.now();
+    final compact =
+        "${(now.year % 100).toString().padLeft(2, '0')}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}";
+    final recordingId = "${compact}_counting_Rep${step.repetitionsDone}";
 
     await _logger.startLogging(false, widget.protocol.sessionId);
     _logger.logTaskStart(_currentIndex, step.heading);

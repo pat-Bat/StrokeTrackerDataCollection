@@ -49,13 +49,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     icon: const Icon(Icons.face),
                     label: const Text("Export FaceMesh Data"),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () => _showExportDialog(type: "audio"),
-                    icon: const Icon(Icons.mic),
-                    label: Text(widget.t(
-                        "Export Audio (WAV)", "Audio exportieren (WAV)")),
-                  ),
                   const Spacer(),
                   Padding(
                     padding: EdgeInsetsGeometry.only(bottom: 20),
@@ -101,12 +94,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
   }
 
   Future<void> _exportSingle(String type) async {
-    List<File> files;
+    final List<File> files;
 
     if (type == "logs") {
       files = await ExperimentLogger.getAllLogFiles();
-    } else if (type == "audio") {
-      files = await ExperimentLogger.getAllAudioFiles();
     } else {
       files = await ExperimentLogger.getAllFaceData();
     }
@@ -117,24 +108,19 @@ class _SummaryScreenState extends State<SummaryScreen> {
           const SnackBar(content: Text("No files found")),
         );
       }
-
-      final file = files.last;
-
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-        ),
-      );
+      return;
     }
+
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(files.last.path)]),
+    );
   }
 
   Future<void> _exportAll(String type) async {
-    List<File> files;
+    final List<File> files;
 
     if (type == "logs") {
       files = await ExperimentLogger.getAllLogFiles();
-    } else if (type == "audio") {
-      files = await ExperimentLogger.getAllAudioFiles();
     } else {
       files = await ExperimentLogger.getAllFaceData();
     }
