@@ -12,7 +12,6 @@ import 'package:open_wearable/apps/widgets/select_earable_view.dart';
 import 'package:open_wearable/apps/widgets/app_tile.dart';
 import 'package:open_wearable/apps/widgets/select_two_earable_view.dart';
 
-
 class AppInfo {
   final String logoPath;
   final String title;
@@ -60,7 +59,6 @@ List<AppInfo> _apps = [
     description: "Session-based data collection with global sensor configs",
     widget: StrokeTrackerView(),
   ),
-
 ];
 
 class AppsPage extends StatelessWidget {
@@ -72,7 +70,7 @@ class AppsPage extends StatelessWidget {
       appBar: PlatformAppBar(
         title: PlatformText("Apps"),
         trailingActions: [
-            PlatformIconButton(
+          PlatformIconButton(
             icon: Icon(context.platformIcons.bluetooth),
             onPressed: () {
               context.push('/connect-devices');

@@ -6,6 +6,7 @@ class TestSelectionScreen extends StatelessWidget {
   final VoidCallback onHeadTurnTest;
   final VoidCallback onArmMovementTest;
   final VoidCallback onCountingTest;
+  final VoidCallback onAnimalSoundTest;
   final String Function(String en, String de) t;
   final VoidCallback onLeaveStudy;
   final List<StudyStep> steps;
@@ -16,6 +17,7 @@ class TestSelectionScreen extends StatelessWidget {
     required this.onHeadTurnTest,
     required this.onArmMovementTest,
     required this.onCountingTest,
+    required this.onAnimalSoundTest,
     required this.t,
     required this.onLeaveStudy,
     required this.steps,
@@ -75,6 +77,16 @@ class TestSelectionScreen extends StatelessWidget {
                   onTap: onCountingTest,
                   completed: steps[3].repetitionsDone - 1,
                   max: steps[3].repetitions,
+                ),
+                const SizedBox(height: 16),
+                _buildTestCard(
+                  title: t("Animal Sounds", "5. Tiergeräusche"),
+                  subtitle: t(
+                      "Play sounds and record response", "Töne abspielen und Antwort aufnehmen"),
+                  icon: Icons.pets,
+                  onTap: onAnimalSoundTest,
+                  completed: steps[4].repetitionsDone - 1,
+                  max: steps[4].repetitions,
                 ),
                 const Spacer(),
                 SizedBox(

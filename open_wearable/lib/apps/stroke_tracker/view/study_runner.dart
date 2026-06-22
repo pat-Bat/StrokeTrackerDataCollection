@@ -16,6 +16,7 @@ import 'package:open_wearable/apps/stroke_tracker/view/measuring_page.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/repetition_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/smile_check_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/counting_measurement_screen.dart';
+import 'package:open_wearable/apps/stroke_tracker/view/animal_sound_measurement_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/study_selector.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/test_selection.dart';
 
@@ -111,13 +112,15 @@ class _StudyRunnerState extends State<StudyRunner> {
     );
   }
 
+  String _buildCompactTimestamp() {
+    final now = DateTime.now();
+    return "${(now.year % 100).toString().padLeft(2, '0')}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}";
+  }
+
   Future<void> _startMeasuring(bool useRing) async {
-    //await _manager.deactivateSensors(); // <-- wichtig
     final step = _steps[_currentIndex];
     final bool useAudio = step.type == StudyStepType.countingMeasurement;
-    final now = DateTime.now();
-    final compact =
-        "${(now.year % 100).toString().padLeft(2, '0')}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}";
+    final compact = _buildCompactTimestamp();
     final recordingId = "${compact}_counting_Rep${step.repetitionsDone}";
 
     await _logger.startLogging(false, widget.protocol.sessionId);
@@ -130,6 +133,23 @@ class _StudyRunnerState extends State<StudyRunner> {
         widget.protocol.sessionId, _currentIndex, step.repetitionsDone, useRing,
         useAudio: useAudio);
     print("Sensoren gestartet");
+  }
+
+  late String _animalSessionCompact;
+
+  Future<void> _startMeasuringForAnimal(String animalName) async {
+    final step = _steps[_currentIndex];
+
+    await _logger.startLogging(false, widget.protocol.sessionId);
+    _logger.logTaskStart(_currentIndex, step.heading);
+
+    print("startAnimalSensorLogFilePrefix: $animalName");
+    await _manager.setAnimalSensorLogFilePrefix(_animalSessionCompact, animalName);
+    print("startConfigureSensors for animal: $animalName");
+    await _manager.configureSensors(
+        widget.protocol.sessionId, _currentIndex, step.repetitionsDone, false,
+        useAudio: true);
+    print("Sensoren gestartet für $animalName");
   }
 
   Future<void> _stopAndConfirm() async {
@@ -150,6 +170,10 @@ class _StudyRunnerState extends State<StudyRunner> {
 
   void onCountingTest() {
     _jumpToTest(6);
+  }
+
+  void onAnimalSoundTest() {
+    _jumpToTest(8);
   }
 
   void _jumpToTest(int index) {
@@ -295,9 +319,10 @@ class _StudyRunnerState extends State<StudyRunner> {
             onHeadTurnTest: onHeadTurnTest,
             onArmMovementTest: onTapTest,
             onCountingTest: onCountingTest,
+            onAnimalSoundTest: onAnimalSoundTest,
             t: widget.protocol.t,
             onLeaveStudy: _endPage,
-            steps: [_steps[1], _steps[3], _steps[5], _steps[7]],
+            steps: [_steps[1], _steps[3], _steps[5], _steps[7], _steps[9]],
           );
         } else {
           final step = _steps[_currentIndex];
@@ -434,6 +459,23 @@ class _StudyRunnerState extends State<StudyRunner> {
               t: widget.protocol.t,
               dispose: _manager.deactivateSensors,
               useRing: false,
+            );
+          }
+
+          if (step.type == StudyStepType.animalSoundMeasurement) {
+            currentInstruction = "AnimalSound";
+            _animalSessionCompact = _buildCompactTimestamp();
+            return AnimalSoundMeasurementScreen(
+              repetitions: step.repetitions,
+              currentRepetition: step.repetitionsDone,
+              startMeasuringForAnimal: _startMeasuringForAnimal,
+              stopMeasuring: _stopAndConfirm,
+              onNext: _saveAndAdvance,
+              onLeaveStudy: _leaveStudy,
+              dispose: _manager.deactivateSensors,
+              audioController: _manager.audioController,
+              logger: _logger,
+              t: widget.protocol.t,
             );
           }
 

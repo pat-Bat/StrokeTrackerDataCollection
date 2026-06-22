@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import '../../../models/logger.dart';
 
 /// A view that displays the sensor configurations of all connected wearables.
-/// 
+///
 /// The specific sensor configurations should be made available via the [SensorConfigurationProvider].
 class SensorConfigurationView extends StatelessWidget {
   final VoidCallback? onSetConfigPressed;
@@ -26,46 +26,55 @@ class SensorConfigurationView extends StatelessWidget {
     );
   }
 
-  Widget _buildSmallScreenLayout(BuildContext context, WearablesProvider wearablesProvider) {
+  Widget _buildSmallScreenLayout(
+      BuildContext context, WearablesProvider wearablesProvider) {
     if (wearablesProvider.wearables.isEmpty) {
       return Center(
-        child: PlatformText("No devices connected", style: Theme.of(context).textTheme.titleLarge),
+        child: PlatformText("No devices connected",
+            style: Theme.of(context).textTheme.titleLarge),
       );
     }
 
     return Padding(
       padding: EdgeInsets.all(10),
       child: wearablesProvider.wearables.isEmpty
-        ? Center(
-          child: PlatformText("No devices connected", style: Theme.of(context).textTheme.titleLarge),
-        )
-        : ListView(
-          children: [
-            ...wearablesProvider.wearables.map((wearable) {
-              if (wearable.hasCapability<SensorConfigurationManager>()) {
-                return ChangeNotifierProvider<SensorConfigurationProvider>.value(
-                  value: wearablesProvider.getSensorConfigurationProvider(wearable),
-                  child: SensorConfigurationDeviceRow(device: wearable),
-                );
-              } else {
-                return SensorConfigurationDeviceRow(device: wearable);
-              }
-            }),
-            _buildThroughputWarningBanner(context),
-            _buildSetConfigButton(
-              configProviders: wearablesProvider.wearables
-                // ignore: prefer_iterable_wheretype
-                .where((wearable) => wearable.hasCapability<SensorConfigurationManager>())
-                .map(
-                  (wearable) => wearablesProvider.getSensorConfigurationProvider(wearable),
-                ).toList(),
+          ? Center(
+              child: PlatformText("No devices connected",
+                  style: Theme.of(context).textTheme.titleLarge),
+            )
+          : ListView(
+              children: [
+                ...wearablesProvider.wearables.map((wearable) {
+                  if (wearable.hasCapability<SensorConfigurationManager>()) {
+                    return ChangeNotifierProvider<
+                        SensorConfigurationProvider>.value(
+                      value: wearablesProvider
+                          .getSensorConfigurationProvider(wearable),
+                      child: SensorConfigurationDeviceRow(device: wearable),
+                    );
+                  } else {
+                    return SensorConfigurationDeviceRow(device: wearable);
+                  }
+                }),
+                _buildThroughputWarningBanner(context),
+                _buildSetConfigButton(
+                  configProviders: wearablesProvider.wearables
+                      // ignore: prefer_iterable_wheretype
+                      .where((wearable) =>
+                          wearable.hasCapability<SensorConfigurationManager>())
+                      .map(
+                        (wearable) => wearablesProvider
+                            .getSensorConfigurationProvider(wearable),
+                      )
+                      .toList(),
+                ),
+              ],
             ),
-          ],
-        ),
     );
   }
 
-  Widget _buildSetConfigButton({required List<SensorConfigurationProvider> configProviders}) {
+  Widget _buildSetConfigButton(
+      {required List<SensorConfigurationProvider> configProviders}) {
     return PlatformElevatedButton(
       onPressed: () {
         for (SensorConfigurationProvider notifier in configProviders) {
@@ -89,17 +98,18 @@ class SensorConfigurationView extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: RichText(
           text: TextSpan(
-            style: Theme.of(context).textTheme.bodyLarge
-                    ?? TextStyle(color: Colors.black, fontSize: 16),
+            style: Theme.of(context).textTheme.bodyLarge ??
+                TextStyle(color: Colors.black, fontSize: 16),
             children: [
               const TextSpan(
                 text: "Info: ",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const TextSpan(
-                text: "Using too many sensors or setting high sampling rates can exceed the system’s "
-                "available bandwidth, causing data drops. Limit the number of active sensors and their "
-                "sampling rates, and record high-rate data directly to the SD card.",
+                text:
+                    "Using too many sensors or setting high sampling rates can exceed the system’s "
+                    "available bandwidth, causing data drops. Limit the number of active sensors and their "
+                    "sampling rates, and record high-rate data directly to the SD card.",
               ),
             ],
           ),
@@ -109,55 +119,68 @@ class SensorConfigurationView extends StatelessWidget {
   }
 
   // ignore: unused_element
-  Widget _buildLargeScreenLayout(BuildContext context, WearablesProvider wearablesProvider) {
+  Widget _buildLargeScreenLayout(
+      BuildContext context, WearablesProvider wearablesProvider) {
     final List<Wearable> devices = wearablesProvider.wearables;
-    List<StaggeredGridTile> tiles = _generateTiles(devices, wearablesProvider.sensorConfigurationProviders);
+    List<StaggeredGridTile> tiles =
+        _generateTiles(devices, wearablesProvider.sensorConfigurationProviders);
     if (tiles.isNotEmpty) {
-      tiles.addAll([
-        StaggeredGridTile.extent(
-          crossAxisCellCount: 1,
-          mainAxisExtent: 230.0,
-          child: _buildThroughputWarningBanner(context),
-        ),
-        StaggeredGridTile.extent(
-          crossAxisCellCount: 1,
-          mainAxisExtent: 100.0,
-          child: _buildSetConfigButton(
-            configProviders: devices.map((device) => wearablesProvider.getSensorConfigurationProvider(device)).toList(),
+      tiles.addAll(
+        [
+          StaggeredGridTile.extent(
+            crossAxisCellCount: 1,
+            mainAxisExtent: 230.0,
+            child: _buildThroughputWarningBanner(context),
           ),
-        ),],
+          StaggeredGridTile.extent(
+            crossAxisCellCount: 1,
+            mainAxisExtent: 100.0,
+            child: _buildSetConfigButton(
+              configProviders: devices
+                  .map((device) =>
+                      wearablesProvider.getSensorConfigurationProvider(device))
+                  .toList(),
+            ),
+          ),
+        ],
       );
     }
 
     return StaggeredGrid.count(
-      crossAxisCount: (MediaQuery.of(context).size.width / 250).floor().clamp(1, 4), // Adaptive grid
+      crossAxisCount: (MediaQuery.of(context).size.width / 250)
+          .floor()
+          .clamp(1, 4), // Adaptive grid
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      children: tiles.isNotEmpty ? tiles : [
-        StaggeredGridTile.extent(
-          crossAxisCellCount: 1,
-          mainAxisExtent: 100.0,
-          child: Card(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: Colors.grey,
-                width: 1,
-                style: BorderStyle.solid,
-                strokeAlign: -1,
+      children: tiles.isNotEmpty
+          ? tiles
+          : [
+              StaggeredGridTile.extent(
+                crossAxisCellCount: 1,
+                mainAxisExtent: 100.0,
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(
+                      color: Colors.grey,
+                      width: 1,
+                      style: BorderStyle.solid,
+                      strokeAlign: -1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: PlatformText("No devices connected",
+                        style: Theme.of(context).textTheme.titleLarge),
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: PlatformText("No devices connected", style: Theme.of(context).textTheme.titleLarge),
-            ),
-          ),
-        ),
-      ],
+            ],
     );
   }
 
   /// Generates a dynamic quilted grid layout based on the device properties
-  List<StaggeredGridTile> _generateTiles(List<Wearable> devices, Map<Wearable, SensorConfigurationProvider> notifiers) {
+  List<StaggeredGridTile> _generateTiles(List<Wearable> devices,
+      Map<Wearable, SensorConfigurationProvider> notifiers) {
     // Sort devices by size dynamically for a balanced layout
     devices.sort((a, b) => _getGridSpanForDevice(b) - _getGridSpanForDevice(a));
 
@@ -181,7 +204,10 @@ class SensorConfigurationView extends StatelessWidget {
       return 1; // Default size
     }
 
-    int sensorConfigCount = device.requireCapability<SensorConfigurationManager>().sensorConfigurations.length;
+    int sensorConfigCount = device
+        .requireCapability<SensorConfigurationManager>()
+        .sensorConfigurations
+        .length;
 
     return sensorConfigCount.clamp(1, 4);
   }

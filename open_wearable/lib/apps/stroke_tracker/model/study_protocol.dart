@@ -108,6 +108,19 @@ class StudyProtocol {
                 "4. Stoppen Sie die Aufnahme.",
           ),
         ),
+        StudyStep(
+          type: StudyStepType.instruction,
+          heading: t("Animal Sounds", "Tiergeräusche"),
+        ),
+        StudyStep(
+          type: StudyStepType.animalSoundMeasurement,
+          heading: t("Animal Sounds", "Tiergeräusche"),
+          repetitions: 15,
+          description: t(
+            "Play each animal sound, then record the patient's response.",
+            "Spielen Sie jeden Tierton ab und nehmen Sie die Antwort des Probanden auf.",
+          ),
+        ),
         StudyStep(type: StudyStepType.ending),
       ];
 }

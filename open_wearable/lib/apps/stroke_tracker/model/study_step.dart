@@ -8,6 +8,7 @@ enum StudyStepType {
   measuringTap,
   cameraMeasurement,
   countingMeasurement,
+  animalSoundMeasurement,
   ending
 }
 

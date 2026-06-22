@@ -86,10 +86,26 @@ class ExperimentManager extends ChangeNotifier {
       );
     }
     await Future.wait([
-      (leftWearable as EdgeRecorderManager).setFilePrefix(_audioController.buildFilePrefix(prefix, isLeft: true)),
-      (rightWearable as EdgeRecorderManager).setFilePrefix(_audioController.buildFilePrefix(prefix, isLeft: false)),
+      (leftWearable as EdgeRecorderManager).setFilePrefix(
+          _audioController.buildFilePrefix(prefix, isLeft: true)),
+      (rightWearable as EdgeRecorderManager).setFilePrefix(
+          _audioController.buildFilePrefix(prefix, isLeft: false)),
     ]);
   }
+
+  Future<void> setAnimalSensorLogFilePrefix(String sessionCompact, String animalName) async {
+    if (leftWearable is! EdgeRecorderManager || rightWearable is! EdgeRecorderManager) {
+      throw Exception("Wearable does not support setting a log file prefix");
+    }
+    await Future.wait([
+      (leftWearable as EdgeRecorderManager).setFilePrefix(
+          _audioController.buildAnimalFilePrefix(sessionCompact, animalName, isLeft: true)),
+      (rightWearable as EdgeRecorderManager).setFilePrefix(
+          _audioController.buildAnimalFilePrefix(sessionCompact, animalName, isLeft: false)),
+    ]);
+  }
+
+  AudioController get audioController => _audioController;
 
   SensorFrequencyConfigurationValue? _findBestMatch(
     List<SensorConfigurationValue> values,
@@ -220,8 +236,10 @@ class ExperimentManager extends ChangeNotifier {
     }
 
     if (useAudio) {
-      _audioController.enableMicrophoneRecording(leftSensorCfgProvider, _leftSensorIdToCfgMap);
-      _audioController.enableMicrophoneRecording(rightSensorCfgProvider, _rightSensorIdToCfgMap);
+      _audioController.enableMicrophoneRecording(
+          leftSensorCfgProvider, _leftSensorIdToCfgMap);
+      _audioController.enableMicrophoneRecording(
+          rightSensorCfgProvider, _rightSensorIdToCfgMap);
     }
 
     if (useRing) {
