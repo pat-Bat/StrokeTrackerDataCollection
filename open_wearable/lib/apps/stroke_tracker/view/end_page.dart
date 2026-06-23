@@ -112,7 +112,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     }
 
     await SharePlus.instance.share(
-      ShareParams(files: [XFile(files.last.path)]),
+      ShareParams(files: [XFile(files.last.path, mimeType: 'text/csv')]),
     );
   }
 
@@ -133,7 +133,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
       }
     }
 
-    final xFiles = files.map((f) => XFile(f.path)).toList();
+    final xFiles = files.map((f) {
+      final mime = f.path.endsWith('.bin') ? 'application/octet-stream' : 'text/csv';
+      return XFile(f.path, mimeType: mime);
+    }).toList();
 
     await SharePlus.instance.share(
       ShareParams(

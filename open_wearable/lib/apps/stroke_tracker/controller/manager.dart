@@ -250,16 +250,20 @@ class ExperimentManager extends ChangeNotifier {
     _rightReady = Completer<void>();
     _ringReady = Completer<void>();
     var leftSelectedCfgs = leftSensorCfgProvider.getSelectedConfigurations();
+    print("=== LEFT CONFIGS (${leftSelectedCfgs.length}) ===");
     for (var entry in leftSelectedCfgs) {
       SensorConfiguration config = entry.$1;
       SensorConfigurationValue value = entry.$2;
+      print("  ${config.name}: ${value.key} | ${value}");
       config.setConfiguration(value);
     }
 
     var rightSelectedCfgs = rightSensorCfgProvider.getSelectedConfigurations();
+    print("=== RIGHT CONFIGS (${rightSelectedCfgs.length}) ===");
     for (var entry in rightSelectedCfgs) {
       SensorConfiguration config = entry.$1;
       SensorConfigurationValue value = entry.$2;
+      print("  ${config.name}: ${value.key} | ${value}");
       config.setConfiguration(value);
     }
 
@@ -413,54 +417,6 @@ class ExperimentManager extends ChangeNotifier {
     await _rightSubscription?.cancel();
     await _ringSubscription?.cancel();
 
-    /*
-    // Deactivate each configured sensor by removing their options
-    for (var sensorConfig in expConfig.globalSensorConfigs) {
-      final sensorName = sensorConfig.sensor.toLowerCase();
-      final sensorId = expConfig.getSensorId(sensorName);
-
-      if (sensorId != null && _leftSensorIdToCfgMap.containsKey(sensorId)) {
-        final cfg = _leftSensorIdToCfgMap[sensorId]!;
-        if (cfg is ConfigurableSensorConfiguration) {
-          // Remove streaming option to disable the sensor
-          leftSensorCfgProvider.removeSensorConfigurationOption(
-            cfg,
-            RecordSensorConfigOption(),
-          );
-          leftSensorCfgProvider.removeSensorConfigurationOption(
-            cfg,
-            StreamSensorConfigOption(),
-          );
-          var value = leftSensorCfgProvider.getSelectedConfigurationValue(cfg);
-          if (value != null) {
-            cfg.setConfiguration(
-              value as ConfigurableSensorConfigurationValue,
-            );
-          }
-        }
-      }
-
-      if (sensorId != null && _rightSensorIdToCfgMap.containsKey(sensorId)) {
-        final cfg = _rightSensorIdToCfgMap[sensorId]!;
-        if (cfg is ConfigurableSensorConfiguration) {
-          // Remove streaming option to disable the sensor
-          rightSensorCfgProvider.removeSensorConfigurationOption(
-            cfg,
-            RecordSensorConfigOption(),
-          );
-          rightSensorCfgProvider.removeSensorConfigurationOption(
-            cfg,
-            StreamSensorConfigOption(),
-          );
-          var value = rightSensorCfgProvider.getSelectedConfigurationValue(cfg);
-          if (value != null) {
-            cfg.setConfiguration(
-              value as ConfigurableSensorConfigurationValue,
-            );
-          }
-        }
-      }
-    } */
     await Future.wait([
       ringSensorCfgProvider.turnOffAllSensors(),
       rightSensorCfgProvider.turnOffAllSensors(),

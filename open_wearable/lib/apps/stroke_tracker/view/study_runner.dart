@@ -17,6 +17,7 @@ import 'package:open_wearable/apps/stroke_tracker/view/repetition_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/smile_check_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/counting_measurement_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/animal_sound_measurement_screen.dart';
+import 'package:open_wearable/apps/stroke_tracker/view/arithmetic_measurement_screen.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/study_selector.dart';
 import 'package:open_wearable/apps/stroke_tracker/view/test_selection.dart';
 
@@ -117,39 +118,31 @@ class _StudyRunnerState extends State<StudyRunner> {
     return "${(now.year % 100).toString().padLeft(2, '0')}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}";
   }
 
-  Future<void> _startMeasuring(bool useRing) async {
+  Future<void> _startMeasuring(bool useRing, {String? suffix}) async {
     final step = _steps[_currentIndex];
-    final bool useAudio = step.type == StudyStepType.countingMeasurement;
+    final bool useAudio = step.type == StudyStepType.countingMeasurement ||
+        step.type == StudyStepType.arithmeticMeasurement ||
+        step.type == StudyStepType.animalSoundMeasurement;
     final compact = _buildCompactTimestamp();
-    final recordingId = "${compact}_counting_Rep${step.repetitionsDone}";
+    final stepLabel = switch (step.type) {
+      StudyStepType.countingMeasurement => 'counting',
+      StudyStepType.arithmeticMeasurement => 'arithmetic',
+      StudyStepType.animalSoundMeasurement => 'animal',
+      StudyStepType.cameraMeasurement => 'smile',
+      StudyStepType.measuringHead => 'head',
+      StudyStepType.measuringTap => 'tap',
+      _ => 'measure',
+    };
+    final label = suffix != null ? '${stepLabel}_$suffix' : stepLabel;
+    final recordingId = "${compact}_${label}_Rep${step.repetitionsDone}";
 
     await _logger.startLogging(false, widget.protocol.sessionId);
     _logger.logTaskStart(_currentIndex, step.heading);
 
-    print("startSensorLogFilePrefix");
     await _manager.setSensorLogFilePrefix(recordingId);
-    print("startConfigureSensors");
     await _manager.configureSensors(
         widget.protocol.sessionId, _currentIndex, step.repetitionsDone, useRing,
         useAudio: useAudio);
-    print("Sensoren gestartet");
-  }
-
-  late String _animalSessionCompact;
-
-  Future<void> _startMeasuringForAnimal(String animalName) async {
-    final step = _steps[_currentIndex];
-
-    await _logger.startLogging(false, widget.protocol.sessionId);
-    _logger.logTaskStart(_currentIndex, step.heading);
-
-    print("startAnimalSensorLogFilePrefix: $animalName");
-    await _manager.setAnimalSensorLogFilePrefix(_animalSessionCompact, animalName);
-    print("startConfigureSensors for animal: $animalName");
-    await _manager.configureSensors(
-        widget.protocol.sessionId, _currentIndex, step.repetitionsDone, false,
-        useAudio: true);
-    print("Sensoren gestartet für $animalName");
   }
 
   Future<void> _stopAndConfirm() async {
@@ -174,6 +167,10 @@ class _StudyRunnerState extends State<StudyRunner> {
 
   void onAnimalSoundTest() {
     _jumpToTest(8);
+  }
+
+  void onArithmeticTest() {
+    _jumpToTest(10);
   }
 
   void _jumpToTest(int index) {
@@ -320,9 +317,10 @@ class _StudyRunnerState extends State<StudyRunner> {
             onArmMovementTest: onTapTest,
             onCountingTest: onCountingTest,
             onAnimalSoundTest: onAnimalSoundTest,
+            onArithmeticTest: onArithmeticTest,
             t: widget.protocol.t,
             onLeaveStudy: _endPage,
-            steps: [_steps[1], _steps[3], _steps[5], _steps[7], _steps[9]],
+            steps: [_steps[1], _steps[3], _steps[5], _steps[7], _steps[9], _steps[11]],
           );
         } else {
           final step = _steps[_currentIndex];
@@ -464,11 +462,10 @@ class _StudyRunnerState extends State<StudyRunner> {
 
           if (step.type == StudyStepType.animalSoundMeasurement) {
             currentInstruction = "AnimalSound";
-            _animalSessionCompact = _buildCompactTimestamp();
             return AnimalSoundMeasurementScreen(
               repetitions: step.repetitions,
               currentRepetition: step.repetitionsDone,
-              startMeasuringForAnimal: _startMeasuringForAnimal,
+              startMeasuring: _startMeasuring,
               stopMeasuring: _stopAndConfirm,
               onNext: _saveAndAdvance,
               onLeaveStudy: _leaveStudy,
@@ -476,6 +473,23 @@ class _StudyRunnerState extends State<StudyRunner> {
               audioController: _manager.audioController,
               logger: _logger,
               t: widget.protocol.t,
+            );
+          }
+
+          if (step.type == StudyStepType.arithmeticMeasurement) {
+            currentInstruction = "Arithmetic";
+            return ArithmeticMeasurementScreen(
+              repetitions: step.repetitions,
+              onLeaveStudy: _leaveStudy,
+              onNext: _saveAndAdvance,
+              startMeasuring: _startMeasuring,
+              stopMeasuring: _stopAndConfirm,
+              currentRepetition: step.repetitionsDone,
+              logger: _logger,
+              taskName: step.heading,
+              t: widget.protocol.t,
+              dispose: _manager.deactivateSensors,
+              useRing: false,
             );
           }
 

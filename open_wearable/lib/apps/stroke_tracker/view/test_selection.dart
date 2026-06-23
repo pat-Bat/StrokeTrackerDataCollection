@@ -7,6 +7,7 @@ class TestSelectionScreen extends StatelessWidget {
   final VoidCallback onArmMovementTest;
   final VoidCallback onCountingTest;
   final VoidCallback onAnimalSoundTest;
+  final VoidCallback onArithmeticTest;
   final String Function(String en, String de) t;
   final VoidCallback onLeaveStudy;
   final List<StudyStep> steps;
@@ -18,6 +19,7 @@ class TestSelectionScreen extends StatelessWidget {
     required this.onArmMovementTest,
     required this.onCountingTest,
     required this.onAnimalSoundTest,
+    required this.onArithmeticTest,
     required this.t,
     required this.onLeaveStudy,
     required this.steps,
@@ -28,10 +30,9 @@ class TestSelectionScreen extends StatelessWidget {
     return PopScope(
         canPop: false,
         child: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
               children: [
                 Text(
                   t("Please choose a test", "Bitte wählen Sie einen Test aus"),
@@ -88,7 +89,17 @@ class TestSelectionScreen extends StatelessWidget {
                   completed: steps[4].repetitionsDone - 1,
                   max: steps[4].repetitions,
                 ),
-                const Spacer(),
+                const SizedBox(height: 16),
+                _buildTestCard(
+                  title: t("Arithmetic", "6. Rechnen"),
+                  subtitle: t(
+                      "Solve arithmetic problems aloud", "Rechenaufgaben laut lösen"),
+                  icon: Icons.calculate,
+                  onTap: onArithmeticTest,
+                  completed: steps[5].repetitionsDone - 1,
+                  max: steps[5].repetitions,
+                ),
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

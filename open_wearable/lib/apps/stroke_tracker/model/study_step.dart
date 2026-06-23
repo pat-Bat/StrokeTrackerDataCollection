@@ -9,6 +9,7 @@ enum StudyStepType {
   cameraMeasurement,
   countingMeasurement,
   animalSoundMeasurement,
+  arithmeticMeasurement,
   ending
 }
 

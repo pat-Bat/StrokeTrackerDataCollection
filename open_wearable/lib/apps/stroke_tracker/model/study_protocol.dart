@@ -121,6 +121,25 @@ class StudyProtocol {
             "Spielen Sie jeden Tierton ab und nehmen Sie die Antwort des Probanden auf.",
           ),
         ),
+        StudyStep(
+          type: StudyStepType.instruction,
+          heading: t("Arithmetic", "Rechnen"),
+        ),
+        StudyStep(
+          type: StudyStepType.arithmeticMeasurement,
+          heading: t("Arithmetic", "Rechnen"),
+          repetitions: 15,
+          description: t(
+            "1. Start the recording.\n"
+                "2. Read aloud the displayed arithmetic expression.\n"
+                "3. Wait for the patient to answer.\n"
+                "4. Stop the recording.",
+            "1. Starten Sie die Aufnahme.\n"
+                "2. Lesen Sie die angezeigte Rechenaufgabe vor.\n"
+                "3. Warten Sie auf die Antwort des Probanden.\n"
+                "4. Stoppen Sie die Aufnahme.",
+          ),
+        ),
         StudyStep(type: StudyStepType.ending),
       ];
 }

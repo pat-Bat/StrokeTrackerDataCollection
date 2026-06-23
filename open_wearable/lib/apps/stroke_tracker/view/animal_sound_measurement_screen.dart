@@ -32,7 +32,7 @@ enum _Phase { idle, playing, starting, recording }
 class AnimalSoundMeasurementScreen extends StatefulWidget {
   final int repetitions;
   final int currentRepetition;
-  final Future<void> Function(String animalName) startMeasuringForAnimal;
+  final Future<void> Function(bool useRing, {String? suffix}) startMeasuring;
   final Future<void> Function() stopMeasuring;
   final Future<void> Function() onNext;
   final Future<void> Function() onLeaveStudy;
@@ -45,7 +45,7 @@ class AnimalSoundMeasurementScreen extends StatefulWidget {
     super.key,
     required this.repetitions,
     required this.currentRepetition,
-    required this.startMeasuringForAnimal,
+    required this.startMeasuring,
     required this.stopMeasuring,
     required this.onNext,
     required this.onLeaveStudy,
@@ -83,7 +83,7 @@ class _AnimalSoundMeasurementScreenState
 
     // Sensoren zuerst starten
     try {
-      await widget.startMeasuringForAnimal(_currentAnimal.key).timeout(
+      await widget.startMeasuring(false, suffix: _currentAnimal.key).timeout(
             const Duration(seconds: 15),
           );
     } catch (e) {
