@@ -295,7 +295,7 @@ class _EarbudSealTestScreenState extends State<EarbudSealTestScreen> {
 
       (firstPeak!['magnitude'] as num?)?.toDouble() == null
           ? null
-          : quality = ((firstPeak!['magnitude'] as num?)!.toInt()).clamp(0, 100);
+          : quality = (firstPeak!['magnitude'] as num?)!.toInt();
     } else {
       firstPeak = null;
     }

@@ -46,9 +46,7 @@ class SelectEarableView extends StatelessWidget {
         final hasLeft = left != null;
         final hasRight = right != null;
         final hasRing = ring != null;
-        // Only require left + right earables so the app can start without a ring.
-        // final bothConnected = hasLeft && hasRight && hasRing;
-        final bothConnected = hasLeft && hasRight;
+        final bothConnected = hasLeft && hasRight && hasRing;
 
         if (!bothConnected) {
           return Scaffold(
@@ -68,7 +66,7 @@ class SelectEarableView extends StatelessWidget {
                     const Icon(Icons.warning, color: Colors.red, size: 40),
                     const SizedBox(height: 10),
                     const Text(
-                      "Missing earables",
+                      "Missing devices",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -76,7 +74,7 @@ class SelectEarableView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(_buildMissingText(hasLeft, hasRight)),
+                    Text(_buildMissingText(hasLeft, hasRight, hasRing)),
                     const SizedBox(height: 20),
                     const Text(
                       "Please connect both left and right earables.",
@@ -90,18 +88,13 @@ class SelectEarableView extends StatelessWidget {
         }
 
         // All CONNECTED → START APP
-        // promote nullable locals to non-nullable because we already
-        // checked `bothConnected == true` above
-        final OpenEarableV2 rightDevice = right!;
-        final OpenEarableV2 leftDevice = left!;
-        final Wearable ringForStart = ring ?? leftDevice;
         return startApp(
-          rightDevice,
-          prov.getSensorConfigurationProvider(rightDevice),
-          leftDevice,
-          prov.getSensorConfigurationProvider(leftDevice),
-          ringForStart,
-          prov.getSensorConfigurationProvider(ringForStart)!,
+          right,
+          prov.getSensorConfigurationProvider(right),
+          left,
+          prov.getSensorConfigurationProvider(left),
+          ring,
+          prov.getSensorConfigurationProvider(ring),
         );
       },
     );
@@ -131,13 +124,15 @@ class SelectEarableView extends StatelessWidget {
     return _EarablePair(left: left, right: right, ring: ring);
   }
 
-  String _buildMissingText(bool hasLeft, bool hasRight) {
-    if (!hasLeft && !hasRight) {
-      return "Left and right earables are not connected.";
+  String _buildMissingText(bool hasLeft, bool hasRight, bool hasRing) {
+    if (!hasLeft && !hasRight && !hasRing) {
+      return "Left/Right earable and ring not connected.";
     } else if (!hasLeft) {
       return "Left earable is not connected.";
-    } else {
+    } else if (!hasRight) {
       return "Right earable is not connected.";
+    } else {
+      return "Ring is not connected.";
     }
   }
 
