@@ -233,13 +233,13 @@ class _TaskScreenState extends State<TaskScreen> {
                     pressExitButton();
                    }  : null,
                 child: Text(
-                  t("Start/Repeat Task", "Nächste Wiederholung Starten")
+                  t("Next Repetition", "Nächste Wiederholung Starten")
                 ),),
                 SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: canGoNext() ? () {widget.onNextTest();pressExitButton();} : null,
                   child: Text(
-                    t("Start/Repeat Task", "Zur Nächsten Aufgabe")
+                    t("Next Task", "Zur Nächsten Aufgabe")
                   ),)
               ],
             ),
@@ -248,7 +248,7 @@ class _TaskScreenState extends State<TaskScreen> {
                 ElevatedButton(
                   onPressed: canGoNext() ? pressExitButton : null,
                   child: Text(
-                    t("Start/Repeat Task", "Zur Nächsten Aufgabe")
+                    t("Next Task", "Zur Nächsten Aufgabe")
                   ),)
               
           ],

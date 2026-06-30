@@ -57,13 +57,13 @@ class _ArithmeticMeasurementScreenState
     final bool isAddition = _random.nextBool();
     int a, b;
     if (isAddition) {
-      a = _random.nextInt(100) + 1;
-      b = _random.nextInt(100) + 1;
+      a = _random.nextInt(25);
+      b = _random.nextInt(25);
       _expression = "$a + $b";
       _result = a + b;
     } else {
-      a = _random.nextInt(100) + 1;
-      b = _random.nextInt(a) + 1;
+      a = _random.nextInt(25);
+      b = _random.nextInt(a);
       _expression = "$a - $b";
       _result = a - b;
     }
@@ -296,13 +296,11 @@ class _ArithmeticMeasurementScreenState
                                 ? null
                                 : _startRecording,
                             icon: const Icon(Icons.fiber_manual_record),
-                            label: Text(
-                                t("Start Record", "Aufnahme starten")),
+                            label: Text(t("Start Record", "Aufnahme starten")),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                             ),
                           ),
                         ),
@@ -311,13 +309,11 @@ class _ArithmeticMeasurementScreenState
                           child: ElevatedButton.icon(
                             onPressed: _recording ? _stopRecording : null,
                             icon: const Icon(Icons.stop),
-                            label: Text(
-                                t("End Record", "Aufnahme beenden")),
+                            label: Text(t("End Record", "Aufnahme beenden")),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                             ),
                           ),
                         ),
@@ -334,8 +330,7 @@ class _ArithmeticMeasurementScreenState
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
-                            color: Colors.white),
+                        const CircularProgressIndicator(color: Colors.white),
                         const SizedBox(height: 20),
                         Text(
                           t("Starting sensors...",

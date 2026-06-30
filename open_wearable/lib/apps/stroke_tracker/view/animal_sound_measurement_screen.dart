@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/audio_controller.dart';
 import 'package:open_wearable/apps/stroke_tracker/controller/logger.dart';
 
@@ -21,10 +22,30 @@ class AnimalSound {
 }
 
 const List<AnimalSound> animalSounds = [
-  AnimalSound(key: 'cow', file: 'cow_moo.mp3', labelEn: 'Cow', labelDe: 'Kuh', icon: Icons.pets),
-  AnimalSound(key: 'duck', file: 'duck_quack.mp3', labelEn: 'Duck', labelDe: 'Ente', icon: Icons.water_drop),
-  AnimalSound(key: 'cat', file: 'cat_meow.mp3', labelEn: 'Cat', labelDe: 'Katze', icon: Icons.pets),
-  AnimalSound(key: 'dog', file: 'dog_bark.mp3', labelEn: 'Dog', labelDe: 'Hund', icon: Icons.pets),
+  AnimalSound(
+      key: 'cow',
+      file: 'cow_moo.mp3',
+      labelEn: 'Cow',
+      labelDe: 'Kuh',
+      icon: FontAwesomeIcons.cow),
+  AnimalSound(
+      key: 'Rooster',
+      file: 'rooster_caw.mp3',
+      labelEn: 'Rooster',
+      labelDe: 'Hahn',
+      icon: FontAwesomeIcons.crow),
+  AnimalSound(
+      key: 'cat',
+      file: 'cat_meow.mp3',
+      labelEn: 'Cat',
+      labelDe: 'Katze',
+      icon: FontAwesomeIcons.cat),
+  AnimalSound(
+      key: 'dog',
+      file: 'dog_bark.mp3',
+      labelEn: 'Dog',
+      labelDe: 'Hund',
+      icon: FontAwesomeIcons.dog),
 ];
 
 enum _Phase { idle, playing, starting, recording }
@@ -228,7 +249,8 @@ class _AnimalSoundMeasurementScreenState
                         child: Column(
                           children: [
                             Text(
-                              t("Examiner Instruction", "Anweisung für Untersucher"),
+                              t("Examiner Instruction",
+                                  "Anweisung für Untersucher"),
                               style: const TextStyle(
                                 color: Colors.deepOrange,
                                 fontSize: 16,
@@ -289,7 +311,8 @@ class _AnimalSoundMeasurementScreenState
                         Text(
                           _phase == _Phase.playing
                               ? t("Playing sound...", "Ton wird abgespielt...")
-                              : t("Starting sensors...", "Sensoren werden gestartet..."),
+                              : t("Starting sensors...",
+                                  "Sensoren werden gestartet..."),
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18),
                         ),
@@ -323,8 +346,8 @@ class _AnimalSoundMeasurementScreenState
         color = Colors.red;
     }
     return Text(text,
-        style: TextStyle(
-            color: color, fontSize: 18, fontWeight: FontWeight.w600));
+        style:
+            TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600));
   }
 
   Widget _buildButtons() {

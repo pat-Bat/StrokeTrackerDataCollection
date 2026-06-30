@@ -8,8 +8,9 @@ class AudioController {
   static const String _soundAssetPath = 'lib/apps/stroke_tracker/assets/sounds';
   final AudioPlayer _player = AudioPlayer();
 
-  Future<void> playAssetSound(String filename) async {
+  Future<void> playAssetSound(String filename, {double volume = 0.1}) async {
     try {
+      await _player.setVolume(volume);
       final byteData = await rootBundle.load('$_soundAssetPath/$filename');
       await _player.play(BytesSource(byteData.buffer.asUint8List()));
     } catch (e) {

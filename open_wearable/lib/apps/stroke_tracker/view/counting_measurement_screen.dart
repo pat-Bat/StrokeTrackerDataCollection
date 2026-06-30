@@ -243,16 +243,6 @@ class _CountingMeasurementScreenState extends State<CountingMeasurementScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "10 9 8 7 6 5 4 3 2 1 0",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.grey.shade900,
-                                fontSize: 34,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            Text(
                               _recording
                                   ? t(
                                       "Recording...",

@@ -463,6 +463,7 @@ class _StudyRunnerState extends State<StudyRunner> {
           if (step.type == StudyStepType.animalSoundMeasurement) {
             currentInstruction = "AnimalSound";
             return AnimalSoundMeasurementScreen(
+              key: ValueKey('animal_${step.repetitionsDone}'),
               repetitions: step.repetitions,
               currentRepetition: step.repetitionsDone,
               startMeasuring: _startMeasuring,
@@ -479,6 +480,7 @@ class _StudyRunnerState extends State<StudyRunner> {
           if (step.type == StudyStepType.arithmeticMeasurement) {
             currentInstruction = "Arithmetic";
             return ArithmeticMeasurementScreen(
+              key: ValueKey('arithmetic_${step.repetitionsDone}'),
               repetitions: step.repetitions,
               onLeaveStudy: _leaveStudy,
               onNext: _saveAndAdvance,
